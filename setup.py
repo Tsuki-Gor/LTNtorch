@@ -1,4 +1,9 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages # 引入打包工具，这里用的是setuptools
+# setuptools是一个集成了easy_install的功能，可以简化安装第三方库的过程，也可以打包分发自己的库
+# find_packages是一个setuptools的函数，会自动发现有__init__.py的文件夹，可以递归查找，找到所有包
+# setup是一个配置函数，用来描述库的名字，版本，作者，简介等信息
+# 详细的参数可以参考官方文档：https://setuptools.pypa.io/en/latest/setuptools.html
+# 该文件的作用是告诉setuptools如何打包这个库，以及如何安装
 
 with open("README.md", "r") as fh:
     long_description = fh.read()

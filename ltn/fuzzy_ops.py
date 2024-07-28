@@ -9,6 +9,7 @@ All the operators included in this module support the traditional NumPy/PyTorch 
 
 The operators have been designed to be used with :class:`ltn.core.Connective` or :class:`ltn.core.Quantifier`.
 """
+# ltn/fuzzy_ops.py: 该模块使用PyTorch原语实现常见的模糊逻辑语义。
 
 import torch
 from ltn import LTNObject

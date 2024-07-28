@@ -6,6 +6,26 @@
 ![python version](https://img.shields.io/badge/python-3.7|3.8|3.9-blue)
 [![DOI BADGE](https://zenodo.org/badge/DOI/10.5281/zenodo.6394282.svg)](https://doi.org/10.5281/zenodo.6394282)
 
+![](https://raw.githubusercontent.com/Tsuki-Gor/Pic_Bed_Ob/main/Mixed/M2024/07/2024_07_25__23_11_54_3885c9.png)
+
+- tutorials/: 该文件夹包含一些入门教程。
+- examples/: 该文件夹包含使用LTN处理各种问题的示例。
+- tests/: 该文件夹包含用于测试核心模块和模糊操作模块的单元测试。
+
+开始
+
+tutorials/包含一些重要的教程，建议按顺序完成这些教程。这些教程涵盖以下主题：
+
+- 在LTN中的基础知识：实数逻辑、常量、谓词、函数、变量。
+- 在LTN中的连接词和量词。
+- 使用LTN公式的可满足性作为训练目标进行学习。
+
+示例
+
+examples/包含在论文“Reach of Logic Tensor Networks”部分中包括的系列示例。
+
+目标是展示实数逻辑语言如何用于指定涉及从数据中学习和推理逻辑知识的任务。
+
 # LTNtorch: PyTorch implementation of Logic Tensor Networks
 
 Welcome to the PyTorch's implementation of [Logic Tensor Networks](https://arxiv.org/abs/2012.13635)!
@@ -84,7 +104,9 @@ computational graphs.
 
 Let us assume we have 6 people which are denoted using 4 real-valued features.
 The previous figure illustrates the following:
-![Computational_graph_explanation](https://github.com/tommasocarraro/LTNtorch/blob/main/images/computational_graph_explanation.png?raw=true)
+![Computational_graph_explanation](https://raw.githubusercontent.com/Tsuki-Gor/Pic_Bed_Ob/main/Mixed/M2024/07/2024_07_25__23_28_13_efd831.png)
+
+[上面的内容的解释](我的解释.md#一)
 
 ### Conclusion
 

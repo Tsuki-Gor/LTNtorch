@@ -71,4 +71,31 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+
+# html_static_path = ['_static']
+html_static_path = ['../../docs/_static'] # 更新路径
+
+# 先生成latex，再生成PDF：生成Latex时，公式可能有错误，而且生成PDF的时候，有的公式好像无法正确显示，故放弃
+
+# # -- 为了输出latex -------------------------------------------------
+#
+# # 如果没有以下部分，请添加
+#
+# # 主文档，指向入口文件
+# master_doc = 'index'
+#
+# # LaTeX 配置
+# latex_engine = 'pdflatex'
+# latex_documents = [
+#     (master_doc, 'ProjectName.tex', 'Project Name Documentation',
+#      'Author Name', 'manual'),
+# ]
+#
+# # 在 conf.py 文件中添加以下内容，以便在生成的 LaTeX 文件中包含所需的包，进而支持数学公式的显示
+#
+# latex_elements = {
+#     'preamble': r'''
+# \usepackage{amssymb}
+# \usepackage{amsmath}
+# '''
+# }

@@ -2,6 +2,7 @@
 The `ltn.core` module contains the main functionalities of LTNtorch. In particular, it contains the definitions of
 constants, variables, predicates, functions, connectives, and quantifiers.
 """
+# ltn/core.py: 该模块包含LTN框架的实现，定义了常量、变量、谓词、函数、连接词和量词。
 
 import copy
 import torch
