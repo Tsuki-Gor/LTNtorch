@@ -390,12 +390,15 @@ def process_ltn_objects(objects):
 
 class LambdaModel(nn.Module):
     """
+    # 继承自 nn.Module 类，这是 PyTorch 中所有神经网络模块的基类。
     Simple `nn.Module` that implements a non-trainable model based on a lambda function or a function.
+    # 实现一个基于 Lambda 函数（即一个匿名函数）或函数的不可训练模型的简单 nn.Module。
 
     Parameters
     ----------
     func: :class:`function`
         Lambda function or function that has to be applied in the forward of the model.
+        # 要在模型的前向传播中应用的 Lambda 函数或函数。
 
     Attributes
     ---------
@@ -406,12 +409,14 @@ class LambdaModel(nn.Module):
         super(LambdaModel, self).__init__()
         self.func = func
 
-    def forward(self, *x):
+    def forward(self, *x): # *x 表示接受任意数量的参数，并将它们作为元组传递给函数。
         return self.func(*x)
 
 
 class Predicate(nn.Module):
     """
+    中英对照可以在 [Predicate类](./Predicate.md) 找到。
+
     Class representing an LTN predicate.
 
     An LTN predicate is :ref:`grounded <notegrounding>` as a mathematical function (either pre-defined or learnable)
@@ -457,6 +462,7 @@ class Predicate(nn.Module):
     Examples
     --------
     Unary predicate defined using a :class:`torch.nn.Sequential`.
+    # 使用 torch.nn.Sequential 定义的一元谓词。
 
     >>> import ltn
     >>> import torch
@@ -475,19 +481,23 @@ class Predicate(nn.Module):
       (3): Sigmoid()
     ))
 
-    Unary predicate defined using a function. Note that `torch.sum` is performed on `dim=1`. This is because in LTNtorch
+
+
+    Unary predicate（一元谓词） defined using a function. Note that `torch.sum` is performed on `dim=1`. This is because in LTNtorch
     the first dimension (`dim=0`) is related to the batch dimension, while other dimensions are related to the features
-    of the individuals. Notice that the output of the print is `Predicate(model=LambdaModel())`. This indicates that the
+    of the individuals.（在LTNtorch中，第一个维度(dim=0)与批次维度相关，其他维度与个体的特征相关。） Notice that the output of the print is `Predicate(model=LambdaModel())`. This indicates that the
     LTN predicate has been defined using a function, through the `func` parameter of the constructor.
 
     >>> p_f = ltn.Predicate(func=lambda x: torch.nn.Sigmoid()(torch.sum(x, dim=1)))
     >>> print(p_f)
     Predicate(model=LambdaModel())
 
+
+
     Binary predicate defined using a :class:`torch.nn.Module`. Note the call to `torch.cat` to merge
     the two inputs of the binary predicate.
 
-    >>> class PredicateModel(torch.nn.Module):
+    >>> class PredicateModel(torch.nn.Module): # todo:这个类和Predicate类有什么区别和联系？
     ...     def __init__(self):
     ...         super(PredicateModel, self).__init__()
     ...         elu = torch.nn.ELU()
@@ -501,13 +511,15 @@ class Predicate(nn.Module):
     ...         out = self.sigmoid(self.dense2(x))
     ...         return out
     ...
-    >>> predicate_model = PredicateModel()
+    >>> predicate_model = PredicateModel() # 实例化一个类的对象
     >>> b_p = ltn.Predicate(model=predicate_model)
     >>> print(b_p)
     Predicate(model=PredicateModel(
       (dense1): Linear(in_features=4, out_features=5, bias=True)
       (dense2): Linear(in_features=5, out_features=1, bias=True)
     ))
+
+
 
     Binary predicate defined using a function. Note the call to `torch.cat` to merge the two inputs of the
     binary predicate.
@@ -518,6 +530,8 @@ class Predicate(nn.Module):
     >>> print(b_p_f)
     Predicate(model=LambdaModel())
 
+
+
     Evaluation of a unary predicate on a constant. Note that:
 
     - the predicate returns a :class:`ltn.core.LTNObject` instance;
@@ -527,7 +541,7 @@ class Predicate(nn.Module):
     - the `value` is in the range [0., 1.] since it has to be interpreted as a truth value. This is assured thanks to the *sigmoid function* in the definition of the predicate.
 
     >>> c = ltn.Constant(torch.tensor([0.5, 0.01, 0.34, 0.001]))
-    >>> out = p_f(c)
+    >>> out = p_f(c) # p_f 是一个一元谓词。应用谓词：p_f(c) 将常量 c 作为输入应用到谓词 p_f 上，并将结果赋值给 out。
     >>> print(type(out))
     <class 'ltn.core.LTNObject'>
     >>> print(out)
@@ -538,6 +552,8 @@ class Predicate(nn.Module):
     []
     >>> print(out.shape())
     torch.Size([])
+
+
 
     Evaluation of a unary predicate on a variable. Note that:
 
@@ -556,6 +572,8 @@ class Predicate(nn.Module):
     >>> print(out.shape())
     torch.Size([2])
 
+
+
     Evaluation of a binary predicate on a variable and a constant. Note that:
 
     - like in the previous example, the `LTNObject` in output has just one free variable, since only one variable has been given to the predicate;
@@ -573,6 +591,8 @@ class Predicate(nn.Module):
     ['v']
     >>> print(out.shape())
     torch.Size([2])
+
+
 
     Evaluation of a binary predicate on two variables. Note that:
 
@@ -600,6 +620,8 @@ class Predicate(nn.Module):
     >>> print(out.value[1, 2])
     tensor(0.6906)
     """
+
+
     def __init__(self, model=None, func=None):
         """
         Initializes the LTN predicate in two different ways:
