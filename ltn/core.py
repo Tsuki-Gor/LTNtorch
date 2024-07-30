@@ -626,8 +626,7 @@ class Predicate(nn.Module):
         """
         Initializes the LTN predicate in two different ways:
             1. if `model` is not None, it initializes the predicate with the given PyTorch model;
-            2. if `model` is None, it uses the `func` as a function to define
-            the LTN predicate. Note that, in this case, the LTN predicate is not learnable. So, the lambda function has
+            2. if `model` is None, it uses the `func` as a function to define the LTN predicate. Note that, in this case, the LTN predicate is not learnable. So, the lambda function has
             to be used only for simple predicates.
         """
         super(Predicate, self).__init__()
@@ -648,7 +647,7 @@ class Predicate(nn.Module):
             if not isinstance(func, types.LambdaType):
                 raise TypeError("Predicate() : argument 'func' (position 2) must be a function, "
                                 "not " + str(type(model)))
-            self.model = LambdaModel(func)
+            self.model = LambdaModel(func) # 使用函数定义谓词，其实就是将函数包装成一个 LambdaModel 类的对象，这样就可以像使用模型一样使用函数了。
 
     def __repr__(self):
         return "Predicate(model=" + str(self.model) + ")"
@@ -659,16 +658,23 @@ class Predicate(nn.Module):
 
         Before computing the predicate, it performs the :ref:`LTN broadcasting <broadcasting>` of the inputs.
 
+        该函数计算给定一些 :ref:`LTN 对象 <noteltnobject>` 输入的谓词输出。
+
+        在计算谓词之前，它会执行输入的 :ref:`LTN 广播 <broadcasting>`。
+
         Parameters
         ----------
         inputs : :obj:`tuple` of :class:`ltn.core.LTNObject`
             Tuple of :ref:`LTN objects <noteltnobject>` for which the predicate has to be computed.
+            要计算谓词的 :ref:`LTN 对象 <noteltnobject>` 的元组。
 
         Returns
         ----------
         :class:`ltn.core.LTNObject`
             An :ref:`LTNObject <noteltnobject>` whose `value` attribute contains the truth values representing the result of the
             predicate, while `free_vars` attribute contains the labels of the free variables contained in the result.
+
+            一个 :ref:`LTNObject <noteltnobject>`，其 `value` 属性包含表示谓词结果的真值，`free_vars` 属性包含结果中包含的自由变量标签。
 
         Raises
         ----------
@@ -739,14 +745,16 @@ class Function(nn.Module):
     - defining an LTN function using a python function is suggested only for simple and non-learnable mathematical operations;
     - examples of LTN functions could be distance functions, regressors, etc;
     - differently from LTN predicates, the output of an LTN function has no constraints;
-    - evaluating a function with one variable of :math:`n` individuals yields :math:`n` output values, where the :math:`i_{th}` output value corresponds to the function calculated with the :math:`i_{th}` individual;
-    - evaluating a function with :math:`k` variables :math:`(x_1, \dots, x_k)` with respectively :math:`n_1, \dots, n_k` individuals each, yields a result with :math:`n_1 * \dots * n_k` values. The result is organized in a tensor where the first :math:`k` dimensions can be indexed to retrieve the outcome(s) that correspond to each variable;
+    - 与 LTN 谓词不同，LTN 函数的输出没有约束；
+    - evaluating a function with one variable of :math:`n` individuals yields :math:`n` output values, where the :math:`i_{th}` output value corresponds to the function calculated with the :math:`i_{th}` individual; # 一个变量（这个变量有n个个体）的函数计算结果是n个输出值，其中第i个输出值对应于第i个个体的函数计算；
+    - evaluating a function with :math:`k` variables :math:`(x_1, \dots, x_k)` with respectively :math:`n_1, \dots, n_k` individuals each, yields a result with :math:`n_1 * \dots * n_k` values. The result is organized in a tensor where the first :math:`k` dimensions can be indexed to retrieve the outcome(s) that correspond to each variable; # 用k个变量（分别是x1，…，xk）计算函数，每个变量分别有n1，…，nk个个体，得到的结果有n1 * … * nk个值。结果以张量的形式组织，可以索引前k个维度以检索与每个变量对应的结果；
     - the attribute `free_vars` of the `LTNobject` output by the function tells which dimension corresponds to which variable in the `value` of the `LTNObject`. See :ref:`LTN broadcasting <broadcasting>` for more information;
-    - to disable the :ref:`LTN broadcasting <broadcasting>`, see :func:`ltn.core.diag()`.
+    - to disable the :ref:`LTN broadcasting <broadcasting>`, see :func:`ltn.core.diag()`. # 要禁用 LTN 广播，参见 ltn.core.diag()。
 
     Examples
     --------
     Unary function defined using a :class:`torch.nn.Sequential`.
+    使用torch.nn.Sequential定义的一元函数
 
     >>> import ltn
     >>> import torch
@@ -763,10 +771,13 @@ class Function(nn.Module):
       (2): Linear(in_features=3, out_features=2, bias=True)
     ))
 
+
+
     Unary function defined using a function. Note that `torch.sum` is performed on `dim=1`. This is because in LTNtorch
     the first dimension (`dim=0`) is related to the batch dimension, while other dimensions are related to the features
     of the individuals. Notice that the output of the print is `Function(model=LambdaModel())`. This indicates that the
     LTN function has been defined using a function, through the `func` parameter of the constructor.
+    使用函数定义的一元函数
 
     >>> f_f = ltn.Function(func=lambda x: torch.repeat_interleave(
     ...                                              torch.sum(x, dim=1, keepdim=True), 2, dim=1)
@@ -774,8 +785,11 @@ class Function(nn.Module):
     >>> print(f_f)
     Function(model=LambdaModel())
 
+
+
     Binary function defined using a :class:`torch.nn.Module`. Note the call to `torch.cat` to merge
     the two inputs of the binary function.
+    使用torch.nn.Module定义的二元函数
 
     >>> class FunctionModel(torch.nn.Module):
     ...     def __init__(self):
@@ -797,8 +811,10 @@ class Function(nn.Module):
       (dense1): Linear(in_features=4, out_features=5, bias=True)
     ))
 
-    Binary function defined using a function. Note the call to `torch.cat` to merge the two inputs of the
-    binary function.
+
+
+    Binary function defined using a function. Note the call to `torch.cat` to merge the two inputs of the binary function.
+    使用函数定义的二元函数
 
     >>> b_f_f = ltn.Function(func=lambda x, y:
     ...                                 torch.repeat_interleave(
@@ -806,6 +822,8 @@ class Function(nn.Module):
     ...                                     dim=1))
     >>> print(b_f_f)
     Function(model=LambdaModel())
+
+
 
     Evaluation of a unary function on a constant. Note that:
 
@@ -821,11 +839,13 @@ class Function(nn.Module):
     >>> print(out)
     LTNObject(value=tensor([0.8510, 0.8510]), free_vars=[])
     >>> print(out.value)
-    tensor([0.8510, 0.8510])
+    tensor([0.8510, 0.8510]) # 为什么输出是两个0.8510,解释于md
     >>> print(out.free_vars)
     []
     >>> print(out.shape())
     torch.Size([2])
+
+
 
     Evaluation of a unary function on a variable. Note that:
 
@@ -845,6 +865,8 @@ class Function(nn.Module):
     ['v']
     >>> print(out.shape())
     torch.Size([2, 2])
+
+
 
     Evaluation of a binary function on a variable and a constant. Note that:
 
@@ -866,10 +888,13 @@ class Function(nn.Module):
     >>> print(out.shape())
     torch.Size([2, 2])
 
+
+
     Evaluation of a binary function on two variables. Note that:
 
     - since two variables have been given, the `LTNObject` in output has two free variables;
     - the shape of the `LTNObject` in output is `(2, 3, 2)` since the function has been evaluated on a variable with two individuals, a variable with three individuals, and returns individuals in :math:`\mathbb{R}^2`;
+    - 输出的LTNObject的形状是(2, 3, 2)，因为函数在具有两个个体的变量和具有三个个体的变量上求值，并返回实数域中的个体；
     - the first dimension is dedicated to variable `x`, which is also the first one appearing in `free_vars`, the second dimension is dedicated to variable `y`, which is the second one appearing in `free_vars`, while the last dimensions is dedicated to the features of the individuals in output;
     - it is possible to access the `value` attribute for getting the results of the function. For example, at position `(1, 2)` there is the evaluation of the function on the second individual of `x` and third individuals of `y`.
 
@@ -887,6 +912,7 @@ class Function(nn.Module):
             [[1.0330, 1.0330],
              [0.9230, 0.9230],
              [0.8030, 0.8030]]]), free_vars=['x', 'y'])
+    todo:一定要想清楚，这个结果矩阵是2*3*2的
     >>> print(out.value)
     tensor([[[1.3700, 1.3700],
              [1.2600, 1.2600],
@@ -908,8 +934,8 @@ class Function(nn.Module):
         Initializes the LTN function in two different ways:
             1. if `model` is not None, it initializes the function with the given PyTorch model;
             2. if `model` is None, it uses the `func` as a lambda function or a function to represent
-            the LTN function. Note that, in this case, the LTN function is not learnable. So, the lambda function has
-            to be used only for simple functions.
+            the LTN function. Note that, in this case, the LTN function is not learnable. So, the lambda function has to be used only for simple functions.
+            # 如果 model 不是 None，则使用给定的 PyTorch 模型初始化函数；如果 model 是 None，则使用 func 作为 lambda 函数或函数来表示 LTN 函数。注意，在这种情况下，LTN 函数是不可学习的。因此，lambda 函数只能用于简单函数。
         """
         super(Function, self).__init__()
         if model is not None and func is not None:
@@ -930,6 +956,7 @@ class Function(nn.Module):
                 raise TypeError("Function() : argument 'func' (position 2) must be a function, "
                                 "not " + str(type(model)))
             self.model = LambdaModel(func)
+            # 如果 func 是 lambda 函数类型，将其包装在 LambdaModel 中，并赋值给 self.model。
 
     def __repr__(self):
         return "Function(model=" + str(self.model) + ")"
@@ -961,14 +988,14 @@ class Function(nn.Module):
             raise TypeError("Expected parameter 'inputs' to be a tuple of LTNObject, but got " + str([type(i)
                                                                                                       for i in inputs]))
 
-        proc_objs, output_vars, output_shape = process_ltn_objects(inputs)
+        proc_objs, output_vars, output_shape = process_ltn_objects(inputs) # 处理输入对象
 
         # the management of the input is left to the model or the lambda function
-        output = self.model(*[o.value for o in proc_objs], **kwargs)
+        output = self.model(*[o.value for o in proc_objs], **kwargs) # 计算函数输出
 
-        output = torch.reshape(output, tuple(output_shape + list(output.shape[1::])))
+        output = torch.reshape(output, tuple(output_shape + list(output.shape[1::]))) # 调整输出形状
 
-        output = output.float()
+        output = output.float() # 转换输出类型
 
         return LTNObject(output, output_vars)
 
