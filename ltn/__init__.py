@@ -1,5 +1,5 @@
 from ltn.core import Variable, Predicate, Constant, Function, Connective, diag, undiag, Quantifier, \
-    LTNObject, process_ltn_objects, LambdaModel
+    LTNObject, process_ltn_objects, LambdaModel # "\"的作用是换行
 import torch
 import ltn.fuzzy_ops
 

@@ -1002,7 +1002,7 @@ class Function(nn.Module):
 
 def diag(*vars):
     """
-    Sets the given LTN variables for :ref:`diagonal quantification <diagonal>`.
+    Sets the given LTN variables for :ref:`diagonal quantification <diagonal>`. # 这个函数是为了给**Variables**这个类的实例设置对角量化
 
     The diagonal quantification disables the :ref:`LTN broadcasting <broadcasting>` for the given variables.
 
@@ -1026,18 +1026,23 @@ def diag(*vars):
 
     Notes
     -----
-    - diagonal quantification has been designed to work with quantified statements, however, it could be used also to reduce the combinations of individuals for which a predicate has to be computed, making the computation more efficient;
+    - diagonal quantification has been designed to work with quantified statements, however, it could be used also to reduce the combinations of individuals for which a predicate has to be computed, making the computation more efficient; # todo:理解
+    - 对角量化设计用于处理量化语句，但也可用于减少需要计算谓词的个体组合，从而提高计算效率；
     - diagonal quantification is particularly useful when we need to compute a predicate, or function, on specific tuples of variables' individuals only;
+    - 当我们需要仅在特定变量个体元组上计算谓词或函数时，对角量化特别有用；
     - diagonal quantification expects the given variables to have the same number of individuals.
+    - 对角量化要求给定变量具有相同数量的个体。
 
     See Also
     --------
     :func:`ltn.core.undiag`
         It allows to disable the diagonal quantification for the given variables.
+        允许禁用给定变量的对角量化。
 
     Examples
     --------
     Behavior of a predicate without diagonal quantification. Note that:
+     未使用对角量化时谓词的行为。请注意：
 
     - if diagonal quantification is not used, LTNtorch applies the :ref:`LTN broadcasting <broadcasting>` to the variables before computing the predicate;
     - the shape of the `LTNObject` in output is `(2, 2)` since the predicate has been computed on two variables with two individuals each;
@@ -1059,15 +1064,23 @@ def diag(*vars):
     >>> print(out.shape())
     torch.Size([2, 2])
 
+
+
     Behavior of the same predicate with diagonal quantification. Note that:
+    使用对角量化时相同谓词的行为。请注意：
 
     - diagonal quantification requires the two variables to have the same number of individuals;
+    - 对角量化要求两个变量具有相同数量的个体；
     - diagonal quantification has disabled the :ref:`LTN broadcasting <broadcasting>`, namely the predicate is not computed on all the possible combinations of individuals of the two variables (that are 2x2). Instead, it is computed only on the given tuples of individuals (that are 2), namely on the first individual of `x` and first individual of `y`, and on the second individual of `x` and second individual of `y`;
+    - 对角量化禁用了LTN广播，即谓词不会在两个变量的所有可能个体组合（2x2）上计算。而是仅在给定的个体元组（即两个个体）上计算，即在`x`的第一个个体和`y`的第一个个体，以及`x`的第二个个体和`y`的第二个个体上计算； # 正所谓**对角**
     - the shape of the `LTNObject` in output is `(2)` since diagonal quantification has been set and the variables have two individuals;
+    - 输出的`LTNObject`的形状为 `(2)`，因为设置了对角量化，且变量有两个个体；
     - the `free_vars` attribute of the `LTNObject` in output has just one variable, even if two variables have been given to the predicate. This is due to diagonal quantification;
-    - when diagonal quantification is set, you will se a variable label starting with `diag_` in the `free_Vars` attribute.
+    - 输出的`LTNObject`的`free_vars`属性只有一个变量，即使谓词给定了两个变量。这是由于对角量化的结果；
+    - when diagonal quantification is set, you will see a variable label starting with `diag_` in the `free_Vars` attribute.
+    - 设置对角量化时，你会在`free_Vars`属性中看到一个以`diag_`开头的变量标签。
 
-    >>> x, y = ltn.diag(x, y)
+    >>> x, y = ltn.diag(x, y) # todo:结合之前Predicate类那里的代码，这里就是在给参与谓词计算的两个变量设置对角量化
     >>> out = p(x, y)
     >>> print(out.value)
     tensor([0.8447, 0.8115])
@@ -1077,15 +1090,18 @@ def diag(*vars):
     torch.Size([2])
 
     See the examples under :class:`ltn.core.Quantifier` to see how to use :func:`ltn.core.diag` with quantifiers.
+    # 请参阅 :class:`ltn.core.Quantifier` 下的示例，了解如何在量词中使用 :func:`ltn.core.diag`。
     """
     vars = list(vars)
     # check if a list of LTN variables has been passed
     if not all(isinstance(x, Variable) for x in vars):
         raise TypeError("Expected parameter 'vars' to be a tuple of Variable, but got " + str([type(v) for v in vars]))
     # check if the user has given only one variable
-    if not len(vars) > 1:
+    if not len(vars) > 1: # 检查 vars 中是否有多于一个变量。如果没有，抛出 ValueError 异常。
         raise ValueError("Expected parameter 'vars' to be a tuple of more than one Variable, but got just one Variable.")
-    # check if variables have the same number of individuals, assuming the first dimension is the batch dimension
+
+
+    # check if variables have the same number of individuals, assuming the first dimension is the batch dimension # 检查变量是否具有相同数量的个体，假设第一个维度是批处理维度
     n_individuals = [var.shape()[0] for var in vars]
     if not len(
         set(n_individuals)) == 1:
@@ -1099,6 +1115,7 @@ def diag(*vars):
 
 def undiag(*vars):
     """
+    vars是一个元组，而不是一个列表，里面是Variable类的实例
     Resets the :ref:`LTN broadcasting <broadcasting>` for the given LTN variables.
 
     In other words, it removes the :ref:`diagonal quantification <diagonal>` setting from the given variables.
@@ -1126,6 +1143,7 @@ def undiag(*vars):
     Examples
     --------
     Behavior of predicate with diagonal quantification. Note that:
+    对角量化的谓词行为。请注意：
 
     - diagonal quantification requires the two variables to have the same number of individuals;
     - diagonal quantification has disabled the :ref:`LTN broadcasting <broadcasting>`, namely the predicate is not computed on all the possible combinations of individuals of the two variables (that are 2x2). Instead, it is computed only on the given tuples of individuals (that are 2), namely on the first individual of `x` and first individual of `y`, and on the second individual of `x` and second individual of `y`;
@@ -1149,12 +1167,12 @@ def undiag(*vars):
     >>> print(out.shape())
     torch.Size([2])
 
-    :func:`ltn.core.undiag` can be used to restore the :ref:`LTN broadcasting <broadcasting>` for the two variables. In
-    the following, it is shown the behavior of the same predicate without diagonal quantification. Note that:
+    :func:`ltn.core.undiag` can be used to restore the :ref:`LTN broadcasting <broadcasting>` for the two variables. In the following, it is shown the behavior of the same predicate without diagonal quantification. Note that:
+    相同谓词在没有对角量化时的行为。注意：
 
-    - since diagonal quantification has been disabled, LTNtorch applies the :ref:`LTN broadcasting <broadcasting>` to the variables before computing the predicate;
-    - the shape of the `LTNObject` in output is `(2, 2)` since the predicate has been computed on two variables with two individuals each;
-    - the `free_vars` attribute of the `LTNObject` in output contains two variables, namely the variables on which the predicate has been computed.
+    - since diagonal quantification has been disabled, LTNtorch applies the :ref:`LTN broadcasting <broadcasting>` to the variables before computing the predicate; # 由于禁用了对角量化，LTNtorch 在计算谓词之前对变量应用了 LTN 广播；
+    - the shape of the `LTNObject` in output is `(2, 2)` since the predicate has been computed on two variables with two individuals each; # 输出的 `LTNObject` 的形状是 `(2, 2)`，因为谓词在两个具有两个个体的变量上计算；
+    - the `free_vars` attribute of the `LTNObject` in output contains two variables, namely the variables on which the predicate has been computed. # 输出的`LTNObject`的`free_vars`属性包含两个变量，即谓词计算所涉及的变量。
 
     >>> x, y = ltn.undiag(x, y)
     >>> out = p(x, y)
@@ -1166,15 +1184,15 @@ def undiag(*vars):
     >>> print(out.shape())
     torch.Size([2, 2])
     """
-    vars = list(vars)
+    vars = list(vars) # 将传入的参数元组转换为列表。这使得可以方便地对其中的元素进行迭代和修改。
     # check if a list of LTN variables has been passed
     if not all(isinstance(x, Variable) for x in vars):
         raise TypeError("Expected parameter 'vars' to be a tuple of Variable, but got " + str([type(v) for v in vars]))
 
-    for var in vars:
+    for var in vars: # 重置 free_vars 属性
         var.free_vars = [var.latent_var]
     return vars
-
+    # 这段代码迭代 vars 列表中的每个 Variable 对象，并将其 free_vars 属性重置为仅包含该变量的 latent_var 属性。
 
 class Connective:
     """
