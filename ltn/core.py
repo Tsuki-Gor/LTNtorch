@@ -39,60 +39,67 @@ class LTNObject:
 
     Notes
     -----
-    - in LTNtorch, the :ref:`groundings <notegrounding>` of the LTN objects (symbols) are represented using PyTorch tensors, namely :class:`torch.Tensor` instances;
-    - `LTNObject` is used by LTNtorch internally. The user should not create `LTNObject` instances by his/her own, unless strictly necessary.
+    在 LTNtorch 中，LTN 对象（符号）的 :ref:groundings <notegrounding> 使用 PyTorch 张量表示，即 :class:torch.Tensor 实例；
+    LTNObject 在 LTNtorch 内部使用。用户不应该自行创建 LTNObject 实例，除非绝对必要。
     """
 
     def __init__(self, value, var_labels):
-        # check inputs before creating the object
+        # 检查输入参数，在创建对象之前进行验证
         if not isinstance(value, torch.Tensor):
+            # 如果 value 不是 torch.Tensor 类型，则抛出类型错误异常
             raise TypeError("LTNObject() : argument 'value' (position 1) must be a torch.Tensor, not "
                             + str(type(value)))
+        # 检查 var_labels 是否为字符串列表
         if not (isinstance(var_labels, list) and (all(isinstance(x, str) for x in var_labels) if var_labels else True)):
+            # 如果 var_labels 不是字符串列表，则抛出类型错误异常
             raise TypeError("LTNObject() : argument 'var_labels' (position 2) must be a list of strings, not "
                             + str(type(var_labels)))
+        # 初始化对象的值
         self.value = value
+        # 初始化对象的自由变量标签
         self.free_vars = var_labels
 
     def __repr__(self):
+        # 返回 LTNObject 的字符串表示形式
+        # 用于在打印对象或调试时显示对象的详细信息
         return "LTNObject(value=" + str(self.value) + ", free_vars=" + str(self.free_vars) + ")"
 
     def shape(self):
         """
-        Returns the shape of the :ref:`grounding <notegrounding>` of the LTN object.
+        返回 LTN 对象的 :ref:`grounding <notegrounding>` 的形状。
 
         Returns
         -------
         :class:`torch.Size`
-            The shape of the :ref:`grounding <notegrounding>` of the LTN object.
+            LTN 对象的 :ref:`grounding <notegrounding>` 的形状。
         """
         return self.value.shape
 
 
 class Constant(LTNObject):
     r"""
-    Class representing an LTN constant.
+    表示一个 LTN 常量的类。
 
-    An LTN constant denotes an individual :ref:`grounded <notegrounding>` as a tensor in the Real field.
-    The individual can be pre-defined (fixed data point) or learnable (embedding).
+    LTN 常量表示一个个体 :ref:`grounded <notegrounding>` 作为实数域中的张量。
+    这个个体可以是预定义的（固定数据点）或可学习的（嵌入）。
 
-    Parameters
+    参数
     ----------
     value : :class:`torch.Tensor`
-        The :ref:`grounding <notegrounding>` of the LTN constant. It can be a tensor of any order.
-    trainable : :obj:`bool`, default=False
-        Flag indicating whether the LTN constant is trainable (embedding) or not.
+        LTN 常量的 :ref:`grounding <notegrounding>`。它可以是任意阶的张量。
+    trainable : :obj:`bool`, 默认值=False
+        指示 LTN 常量是否可训练（嵌入）的标志。
 
-    Notes
+    备注
     -----
-    - LTN constants are :ref:`LTN objects <noteltnobject>`. :class:`ltn.core.Constant` is a subclass of :class:`ltn.core.LTNObject`;
-    - the attribute `free_vars` for LTN constants is an empty list, since a constant does not have variables by definition;
-    - if parameter `trainable` is set to `True`, the LTN constant becomes trainable, namely an embedding;
-    - if parameter `trainable` is set to `True`, then the `value` attribute of the LTN constant will be used as an initialization for the embedding of the constant.
+    - LTN 常量是 :ref:`LTN object <noteltnobject>`。:class:`ltn.core.Constant` 是 :class:`ltn.core.LTNObject` 的子类；
+    - 对于 LTN 常量，属性 `free_vars` 是一个空列表，因为常量按定义没有变量；
+    - 如果参数 `trainable` 设置为 `True`，则 LTN 常量变得可训练，即一个嵌入；
+    - 如果参数 `trainable` 设置为 `True`，则 LTN 常量的 `value` 属性将被用作常量嵌入的初始化。
 
-    Examples
+    示例
     --------
-    Non-trainable constant
+    非可训练常量
 
     >>> import ltn
     >>> import torch
@@ -106,7 +113,7 @@ class Constant(LTNObject):
     >>> print(c.shape())
     torch.Size([3])
 
-    Trainable constant
+    可训练常量
 
     >>> t_c = ltn.Constant(torch.tensor([[3.4, 2.3, 5.6],
     ...                                  [6.7, 5.6, 4.3]]), trainable=True)
@@ -122,56 +129,54 @@ class Constant(LTNObject):
     torch.Size([2, 3])
     """
     def __init__(self, value, trainable=False):
-        # create sub-object of type LTNObject
+        # 创建一个 LTNObject 类型的子对象
         super(Constant, self).__init__(value, [])
+        # 将 self.value 转移到指定的设备（如 CPU 或 GPU）
         self.value = self.value.to(ltn.device)
         if trainable:
-            # we need to ensure that the tensor is float to set the required_grad to True, since PyTorch needs a float
-            # tensor in this case
+            # 如果张量是可训练的，我们需要确保张量是浮点类型，以便设置 requires_grad 为 True，
+            # 因为 PyTorch 需要浮点张量才能进行梯度计算
             self.value = self.value.float()
+            # 设置张量的 requires_grad 属性，使其可训练
             self.value.requires_grad = trainable
 
     def __repr__(self):
+        # 返回 Constant 对象的字符串表示形式
         return "Constant(value=" + str(self.value) + ", free_vars=" + str(self.free_vars) + ")"
 
 
 class Variable(LTNObject):
     r"""
-    Class representing an LTN variable.
+    表示一个 LTN 变量的类。
 
-    An LTN variable denotes a sequence of individuals. It is :ref:`grounded <notegrounding>` as a sequence of
-    tensors (:ref:`groundings <notegrounding>` of individuals) in the real field.
+    LTN 变量表示一系列个体。它在实数域中 :ref:`grounded <notegrounding>` 为一系列张量（个体的 :ref:`groundings <notegrounding>`）。
 
-    Parameters
+    参数
     ----------
     var_label : :obj:`str`
-        Name of the variable.
+        变量的名称。
     individuals : :class:`torch.Tensor`
-        Sequence of individuals (tensors) that becomes the :ref:`grounding <notegrounding>` the LTN variable.
-    add_batch_dim : :obj:`bool`, default=True
-        Flag indicating whether a batch dimension (first dimension) has to be added to the
-        `vale` of the variable or not. If `True`, a dimension will be added only if the
-        `value` attribute of the LTN variable has one single dimension. In all the other cases, the first dimension
-        will be considered as batch dimension, so no dimension will be added.
+        成为 LTN 变量 :ref:`grounding <notegrounding>` 的一系列个体（张量）。
+    add_batch_dim : :obj:`bool`, 默认值=True
+        标志指示是否需要在变量的 `value` 中添加批处理维度（第一维度）。如果 `True`，只有当 LTN 变量的 `value` 属性只有一个维度时才会添加维度。在所有其他情况下，第一维度将被视为批处理维度，因此不会添加维度。
 
-    Raises
+    异常
     ------
     :class:`TypeError`
-        Raises when the types of the input parameters are not correct.
+        当输入参数的类型不正确时引发。
     :class:`ValueError`
-        Raises when the value of the `var_label` parameter is not correct.
+        当 `var_label` 参数的值不正确时引发。
 
-    Notes
+    备注
     -----
-    - LTN variables are :ref:`LTN objects <noteltnobject>`. :class:`ltn.core.Variable` is a subclass of :class:`ltn.core.LTNObject`;
-    - the first dimension of an LTN variable is associated with the number of individuals in the variable, while the other dimensions are associated with the features of the individuals;
-    - setting `add_batch_dim` to `False` is useful, for instance, when an LTN variable is used to denote a sequence of indexes (for example indexes for retrieving values in tensors);
-    - variable labels starting with '_diag' are reserved for diagonal quantification (:func:`ltn.core.diag`).
+    - LTN 变量是 :ref:`LTN object <noteltnobject>`。:class:`ltn.core.Variable` 是 :class:`ltn.core.LTNObject` 的子类；
+    - LTN 变量的第一个维度与变量中的个体数量相关，而其他维度与个体的特征相关；
+    - 将 `add_batch_dim` 设置为 `False` 是有用的，例如，当 LTN 变量用于表示索引序列（例如用于在张量中检索值的索引）时；
+    - 以 '_diag' 开头的变量标签是为对角量化 (:func:`ltn.core.diag`) 保留的。
 
-    Examples
+    示例
     --------
-    `add_batch_dim=True` has no effects on the variable since its `value` has more than one dimension, namely there is
-    already a batch dimension.
+    `add_batch_dim=True` 对变量没有影响，因为它的 `value` 有多个维度，即已经有批处理维度。
 
     >>> import ltn
     >>> import torch
@@ -188,7 +193,7 @@ class Variable(LTNObject):
     >>> print(x.shape())
     torch.Size([2, 2])
 
-    `add_bath_dim=True` adds a batch dimension to the `value` of the variable since it has only one dimension.
+    `add_bath_dim=True` 为变量的 `value` 添加了一个批处理维度，因为它只有一个维度。
 
     >>> y = ltn.Variable('y', torch.tensor([3.4, 4.5, 8.9]), add_batch_dim=True)
     >>> print(y)
@@ -204,8 +209,7 @@ class Variable(LTNObject):
     >>> print(y.shape())
     torch.Size([3, 1])
 
-    `add_batch_dim=False` tells to LTNtorch to not add a batch dimension to the `value` of the variable. This is useful
-    when a variable contains a sequence of indexes.
+    `add_batch_dim=False` 告诉 LTNtorch 不要为变量的 `value` 添加批处理维度。这在变量包含索引序列时很有用。
 
     >>> z = ltn.Variable('z', torch.tensor([1, 2, 3]), add_batch_dim=False)
     >>> print(z)
@@ -218,119 +222,114 @@ class Variable(LTNObject):
     torch.Size([3])
     """
     def __init__(self, var_label, individuals, add_batch_dim=True):
-        # check inputs
+        # 检查输入参数
         if not isinstance(var_label, str):
             raise TypeError("Variable() : argument 'var_label' (position 1) must be str, not " + str(type(var_label)))
         if var_label.startswith("diag_"):
+            # 如果 var_label 以 "diag_" 开头，抛出值错误异常，因为这些标签是为对角量化保留的
             raise ValueError("Labels starting with 'diag_' are reserved for diagonal quantification.")
         if not isinstance(individuals, torch.Tensor):
             raise TypeError("Variable() : argument 'individuals' (position 2) must be a torch.Tensor, not "
                             + str(type(individuals)))
-
+        # 调用父类 LTNObject 的构造函数，初始化 value 和 free_vars
         super(Variable, self).__init__(individuals, [var_label])
 
         if isinstance(self.value, torch.DoubleTensor):
-            # we ensure that the tensor will be a float tensor and not a double tensor to avoid type incompatibilities
+            # 确保张量是浮点类型而不是双精度类型，以避免类型不兼容
             self.value = self.value.float()
 
         if len(self.value.shape) == 1 and add_batch_dim:
-            # adds a dimension to transform the input in a sequence of individuals in the case in which it is not
-            # already a sequence of individuals but just a tensor with only one dimension
-            # the dimension added will be the batch dimension
-            # Example: [3, 1, 2] is transformed into [[3], [1], [2]] if individuals has one dimension and add_batch_dim
-            # is set to True
+            # 如果张量只有一个维度并且 add_batch_dim 为 True，则添加一个维度
+            # 将输入转换为一系列个体的张量，添加的维度将作为批处理维度
+            # 例如: [3, 1, 2] 被转换为 [[3], [1], [2]]，如果 individuals 只有一个维度且 add_batch_dim 为 True
             self.value = self.value.view(self.value.shape[0], 1)
-
+        # 将 value 转移到指定的设备（如 CPU 或 GPU）
         self.value = self.value.to(ltn.device)
+        # 设置变量标签
         self.latent_var = var_label
 
     def __repr__(self):
+        # 返回 Variable 对象的字符串表示形式
         return "Variable(value=" + str(self.value) + ", free_vars=" + str(self.free_vars) + ")"
 
 
 def process_ltn_objects(objects):
     """
-    This function prepares the list of LTN objects given in input for a predicate, function, or connective computation.
-    In particular, it makes the shapes of the objects compatible, in such a way the logical operation that has to be
-    computed after this pre-processing can be done by using element-wise operations.
-    For example, if we have two variables in input that have different shapes or number of individuals, this function
-    will change the shape of one variable to match the shape of the second one. This reshaping is done by adding new
-    dimensions and repeating the existing ones along the new dimensions.
+    此函数为谓词、函数或连接词计算准备输入的 LTN 对象列表。
+    特别是，它使对象的形状兼容，从而可以通过元素级操作来进行后续的逻辑运算。
+    例如，如果我们输入的两个变量具有不同的形状或个体数量，此函数将更改其中一个变量的形状以匹配另一个变量的形状。
+    这种重新塑形是通过添加新维度并沿着新维度重复现有维度来完成的。
 
-    After these operations have been computed, the objects with compatible shapes are returned as a list and are ready
-    for the computation of the predicate, function, or connective. Along with the processed objects, the labels of the
-    variables contained in these objects and the number of individuals of each variable are returned. This is needed
-    to perform reshapes of the output after the computation of a predicate or function, since each axis of the output
-    has to be related to one specific variable.
+    在这些操作完成后，具有兼容形状的对象将作为列表返回，并准备进行谓词、函数或连接词的计算。
+    除了处理过的对象，还会返回这些对象中包含的变量的标签和每个变量的个体数量。
+    这是在谓词或函数计算后对输出进行重新塑形所必需的，因为输出的每个轴都必须与一个特定变量相关。
 
-    Parameters
+    参数
     ----------
     objects: :obj:`list`
-        List of LTN objects of potentially different shapes for which we need to make the shape compatible.
+        LTN 对象的列表，这些对象可能具有不同的形状，需要使它们的形状兼容。
 
-    Returns
+    返回
     ----------
     :obj:`list`
-        The same list given in input but with new LTN objects which now have compatible shapes.
+        输入的同一个列表，但其中的新 LTN 对象现在具有兼容的形状。
     :obj:`list`
-        List of labels of all the variables which appear in the LTN objects given in input.
+        出现在输入的 LTN 对象中的所有变量的标签列表。
     :obj:`list`
-        List of integers which contains the number of individuals of each variable contained in the previous list.
+        包含前一个列表中每个变量的个体数量的整数列表。
 
-    Raises
+    异常
     ----------
     :class:`TypeError`
-        Raises when the type of the input parameter is incorrect.
+        当输入参数的类型不正确时引发。
     """
     # check inputs
     if not (isinstance(objects, list) and all(isinstance(x, LTNObject) for x in objects)):
         raise TypeError("The objects should be a list of LTNObject")
-    # we perform a deep copy to avoid problems if the LTN objects given in input are used in other formulas
-    # we want to give the user the possibility to use the same object in different formulas
-    # if we do not perform a deep copy, the object itself will be changed by this function even outside of the function
-    # due to a side effect
-    # note that we copy only if the input object is a constant/variable with grad_fn or if the object has not
-    # grad_fn attribute, namely it is a leaf tensor
+    # 我们进行深拷贝以避免如果输入的 LTN 对象在其他公式中使用时出现问题
+    # 我们希望给用户在不同公式中使用相同对象的可能性
+    # 如果我们不进行深拷贝，对象本身即使在函数外部也会因副作用而被更改
+    # 注意，我们只在输入对象是具有 grad_fn 的常量/变量或者对象没有 grad_fn 属性（即叶子张量）时进行拷贝
     objects_ = [LTNObject(torch.clone(o.value), copy.deepcopy(o.free_vars))
                 if (o.value.grad_fn is None or (isinstance(o, (Constant, Variable)) and o.value.grad_fn is not None))
                 else o for o in objects]
-    # this deep copy is necessary to avoid the function directly changes the free
-    # variables and values contained in the given LTN objects. We do not want to directly change the input objects
-    # Instead, we need to create new objects based on the input objects since it is possible we have to reuse the
-    # input objects again in coming steps.
-    vars_to_n = {}  # dict which maps each var to the number of its individuals
+    # 这个深拷贝是必要的，以避免函数直接更改给定 LTN 对象中包含的自由变量和值
+    # 我们不希望直接更改输入对象
+    # 相反，我们需要基于输入对象创建新对象，因为在接下来的步骤中可能需要再次使用输入对象
+    vars_to_n = {}  # 字典，将每个变量映射到其个体的数量
     for o in objects_:
-        for (v_idx, v) in enumerate(o.free_vars):
+        for (v_idx, v) in enumerate(o.free_vars):#enumerate为内置函数，可遍历可迭代对象
+            # 将每个变量映射到其个体的数量
             vars_to_n[v] = o.shape()[v_idx]
-    vars = list(vars_to_n.keys())  # list of var labels
-    n_individuals_per_var = list(vars_to_n.values())  # list of n individuals for each var
-    proc_objs = []  # list of processed objects
+    vars = list(vars_to_n.keys())  # 获取变量标签的列表
+    n_individuals_per_var = list(vars_to_n.values())  # 获取每个变量的个体数量列表
+    proc_objs = [] # 初始化处理过的对象列表
     for o in objects_:
+        # 获取对象中的变量
         vars_in_obj = o.free_vars
+        # 获取对象中没有的变量
         vars_not_in_obj = list(set(vars).difference(vars_in_obj))
         for new_var in vars_not_in_obj:
             new_var_idx = len(vars_in_obj)
+            # 在对象中添加新变量的维度
             o.value = torch.unsqueeze(o.value, dim=new_var_idx)
-            # repeat existing dims along the new dim related to the new variable that has to be added to the object
+            # 沿着新维度重复现有维度，以适应新添加的变量（torch.repeat_interleave)
             o.value = torch.repeat_interleave(o.value, repeats=vars_to_n[new_var], dim=new_var_idx)
             vars_in_obj.append(new_var)
 
-        # permute the dimensions of the object in such a way the shapes of the processed objects is the same
-        # the shape is computed based on the order in which the variables are found at the beginning of this function
+        # 调整对象的维度顺序，使处理后的对象具有相同的形状
         dims_permutation = [vars_in_obj.index(var) for var in vars] + list(range(len(vars_in_obj), len(o.shape())))
         o.value = o.value.permute(dims_permutation)
 
-        # this flats the batch dimension of the processed LTN object if the flat is set to True
+        # 如果 flat 设置为 True，则展平处理后的 LTN 对象的批处理维度
         flatten_shape = [-1] + list(o.shape()[len(vars_in_obj)::])
         o.value = torch.reshape(o.value, shape=tuple(flatten_shape))
 
-        # change the free variables of the LTN object since it contains now new variables on it
-        # note that at the end of this function, all the LTN objects given in input will be defined on the same
-        # variables since they are now compatible to be processed by element-wise predicate, function, or connective
-        # operators
+        # 更改 LTN 对象的自由变量，使其现在包含新变量
+        # 注意，函数结束时，所有输入的 LTN 对象将在相同的变量上定义，因为它们现在可以通过元素级谓词、函数或连接词操作进行处理
         o.free_vars = vars
         proc_objs.append(o)
-
+    # 返回处理过的对象列表、变量标签列表和每个变量的个体数量列表
     return proc_objs, vars, n_individuals_per_var
 
 
