@@ -128,6 +128,7 @@ class Constant(LTNObject):
     >>> print(t_c.shape())
     torch.Size([2, 3])
     """
+
     def __init__(self, value, trainable=False):
         # 创建一个 LTNObject 类型的子对象
         super(Constant, self).__init__(value, [])
@@ -221,6 +222,7 @@ class Variable(LTNObject):
     >>> print(z.shape())
     torch.Size([3])
     """
+
     def __init__(self, var_label, individuals, add_batch_dim=True):
         # 检查输入参数
         if not isinstance(var_label, str):
@@ -298,12 +300,12 @@ def process_ltn_objects(objects):
     # 相反，我们需要基于输入对象创建新对象，因为在接下来的步骤中可能需要再次使用输入对象
     vars_to_n = {}  # 字典，将每个变量映射到其个体的数量
     for o in objects_:
-        for (v_idx, v) in enumerate(o.free_vars):#enumerate为内置函数，可遍历可迭代对象
+        for (v_idx, v) in enumerate(o.free_vars):  # enumerate为内置函数，可遍历可迭代对象
             # 将每个变量映射到其个体的数量
             vars_to_n[v] = o.shape()[v_idx]
     vars = list(vars_to_n.keys())  # 获取变量标签的列表
     n_individuals_per_var = list(vars_to_n.values())  # 获取每个变量的个体数量列表
-    proc_objs = [] # 初始化处理过的对象列表
+    proc_objs = []  # 初始化处理过的对象列表
     for o in objects_:
         # 获取对象中的变量
         vars_in_obj = o.free_vars
@@ -335,18 +337,19 @@ def process_ltn_objects(objects):
 
 class LambdaModel(nn.Module):
     """
-    Simple `nn.Module` that implements a non-trainable model based on a lambda function or a function.
+    实现基于 lambda 函数或普通函数的不可训练模型的简单 `nn.Module`。
 
-    Parameters
+    参数
     ----------
     func: :class:`function`
-        Lambda function or function that has to be applied in the forward of the model.
+        在模型的 forward 方法中需要应用的 lambda 函数或普通函数。
 
-    Attributes
+    属性
     ---------
     func: :class:`function`
-        See func parameter.
+        参见 func 参数。
     """
+
     def __init__(self, func):
         super(LambdaModel, self).__init__()
         self.func = func
@@ -354,64 +357,64 @@ class LambdaModel(nn.Module):
     def forward(self, *x):
         return self.func(*x)
 
+# 这个 LambdaModel 类是一个基于 PyTorch 的简单神经网络模块 (nn.Module)，
+# 它实现了一个不可训练的模型，核心功能是通过一个 lambda 函数或普通函数在前向传播过程中对输入数据进行处理。
 
 class Predicate(nn.Module):
     """
-    Class representing an LTN predicate.
+    表示一个 LTN 谓词的类。
 
-    An LTN predicate is :ref:`grounded <notegrounding>` as a mathematical function (either pre-defined or learnable)
-    that maps from some n-ary domain of individuals to a real number in [0,1] (fuzzy), which can be interpreted as a
-    truth value.
+    LTN 谓词是一个数学函数（预定义或可学习的），它将某个 n 元域的个体映射到 [0,1] 范围内的实数（模糊值），
+    可以解释为一个真值。
 
-    In LTNtorch, the inputs of a predicate are automatically broadcasted before the computation of the predicate,
-    if necessary. Moreover, the output is organized in a tensor where each dimension is related to
-    one variable given in input. See :ref:`LTN broadcasting <broadcasting>` for more information.
+    在 LTNtorch 中，如果需要，谓词的输入会在计算之前自动进行广播。此外，输出组织在一个张量中，
+    每个维度与输入中给定的一个变量相关。有关更多信息，请参见 :ref:`LTN broadcasting <broadcasting>`。
 
-    Parameters
+    参数
     ----------
     model : :class:`torch.nn.Module`, default=None
-        PyTorch model that becomes the :ref:`grounding <notegrounding>` of the LTN predicate.
+        成为 LTN 谓词 :ref:`grounding <notegrounding>` 的 PyTorch 模型。
     func : :obj:`function`, default=None
-        Function that becomes the :ref:`grounding <notegrounding>` of the LTN predicate.
+        成为 LTN 谓词 :ref:`grounding <notegrounding>` 的函数。
 
-    Notes
+    备注
     -----
-    - the output of an LTN predicate is always an :ref:`LTN object <noteltnobject>` (:class:`ltn.core.LTNObject`);
-    - LTNtorch allows to define a predicate using a trainable model **or** a python function, not both;
-    - defining a predicate using a python function is suggested only for simple and non-learnable mathematical operations;
-    - examples of LTN predicates could be similarity measures, classifiers, etc;
-    - the output of an LTN predicate must be always in the range [0., 1.]. Outputs outside of this range are not allowed;
-    - evaluating a predicate with one variable of :math:`n` individuals yields :math:`n` output values, where the :math:`i_{th}` output value corresponds to the predicate calculated with the :math:`i_{th}` individual;
-    - evaluating a predicate with :math:`k` variables :math:`(x_1, \dots, x_k)` with respectively :math:`n_1, \dots, n_k` individuals each, yields a result with :math:`n_1 * \dots * n_k` values. The result is organized in a tensor where the first :math:`k` dimensions can be indexed to retrieve the outcome(s) that correspond to each variable;
-    - the attribute `free_vars` of the `LTNobject` output by the predicate tells which dimension corresponds to which variable in the `value` of the `LTNObject`. See :ref:`LTN broadcasting <broadcasting>` for more information;
-    - to disable the :ref:`LTN broadcasting <broadcasting>`, see :func:`ltn.core.diag()`.
+    - LTN 谓词的输出始终是一个 :ref:`LTN 对象 <noteltnobject>` (:class:`ltn.core.LTNObject`);
+    - LTNtorch 允许使用可训练模型**或** Python 函数来定义谓词，但不能同时使用两者；
+    - 仅建议使用 Python 函数来定义简单且不可学习的数学运算；
+    - LTN 谓词的例子可以是相似性度量、分类器等；
+    - LTN 谓词的输出必须始终在 [0., 1.] 范围内。不允许输出超出此范围；
+    - 使用 n 个个体的一个变量评估谓词会产生 n 个输出值，其中第 i 个输出值对应于使用第 i 个个体计算的谓词；
+    - 使用 k 个变量 (x_1, ..., x_k) 评估谓词，其中每个变量分别有 n_1, ..., n_k 个个体，会产生 n_1 * ... * n_k 个值。
+      结果组织在一个张量中，前 k 个维度可以索引以检索对应于每个变量的结果；
+    - 谓词输出的 LTNobject 的 free_vars 属性告诉哪个维度对应于 LTNObject 值中的哪个变量。有关更多信息，请参见 :ref:`LTN broadcasting <broadcasting>`；
+    - 要禁用 :ref:`LTN broadcasting <broadcasting>`，请参见 :func:`ltn.core.diag()`。
 
-    Attributes
+    属性
     ----------
-    model : :class:`torch.nn.Module` or :obj:`function`
-        The :ref:`grounding <notegrounding>` of the LTN predicate.
+    model : :class:`torch.nn.Module` 或 :obj:`function`
+        LTN 谓词的 :ref:`grounding <notegrounding>`。
 
-    Raises
+    异常
     ----------
     :class:`TypeError`
-        Raises when the types of the input parameters are incorrect.
-
+        当输入参数类型不正确时引发。
     :class:`ValueError`
-        Raises when the values of the input parameters are incorrect.
+        当输入参数值不正确时引发。
 
-    Examples
+    示例
     --------
-    Unary predicate defined using a :class:`torch.nn.Sequential`.
+    使用 :class:`torch.nn.Sequential` 定义的一元谓词。
 
     >>> import ltn
     >>> import torch
-    >>> predicate_model = torch.nn.Sequential(
-    ...                         torch.nn.Linear(4, 2),
-    ...                         torch.nn.ELU(),
-    ...                         torch.nn.Linear(2, 1),
-    ...                         torch.nn.Sigmoid()
+    >>> predicate_model = torch.nn.Sequential(##torch.nn.Sequential：一个顺序容器，Modules 会以它们传入的顺序依次被添加到计算图中。
+    ...                         torch.nn.Linear(4, 2),#torch.nn.Linear(4, 2)：全连接层，输入特征数为 4，输出特征数为 2。
+    ...                         torch.nn.ELU(),#torch.nn.ELU()：ELU（指数线性单元）激活函数，增加模型的非线性能力
+    ...                         torch.nn.Linear(2, 1),#torch.nn.Linear(2, 1)：全连接层，输入特征数为 2，输出特征数为 1。
+    ...                         torch.nn.Sigmoid()#torch.nn.Sigmoid()：Sigmoid 激活函数，将输出限制在 [0, 1] 范围内。
     ...                   )
-    >>> p = ltn.Predicate(model=predicate_model)
+    >>> p = ltn.Predicate(model=predicate_model)#使用上面定义的 PyTorch 模型作为 LTN 谓词的 model 参数
     >>> print(p)
     Predicate(model=Sequential(
       (0): Linear(in_features=4, out_features=2, bias=True)
@@ -420,17 +423,17 @@ class Predicate(nn.Module):
       (3): Sigmoid()
     ))
 
-    Unary predicate defined using a function. Note that `torch.sum` is performed on `dim=1`. This is because in LTNtorch
-    the first dimension (`dim=0`) is related to the batch dimension, while other dimensions are related to the features
-    of the individuals. Notice that the output of the print is `Predicate(model=LambdaModel())`. This indicates that the
-    LTN predicate has been defined using a function, through the `func` parameter of the constructor.
+    使用函数定义的一元谓词。注意 `torch.sum` 在 `dim=1` 上执行。这是因为在 LTNtorch 中，第一个维度 (`dim=0`) 与批处理维度相关，
+    而其他维度与个体的特征相关。注意打印的输出是 `Predicate(model=LambdaModel())`。这表示 LTN 谓词是使用函数通过构造函数的 `func` 参数定义的。
 
     >>> p_f = ltn.Predicate(func=lambda x: torch.nn.Sigmoid()(torch.sum(x, dim=1)))
+    #定义了一个 lambda 函数，该函数接收一个输入 x。
+    #torch.sum(x, dim=1)：对 x 的第 1 维度（假设是特征维度）进行求和操作。
+    #torch.nn.Sigmoid()：应用 Sigmoid 激活函数，将求和后的结果压缩到 [0, 1] 范围内。
     >>> print(p_f)
     Predicate(model=LambdaModel())
 
-    Binary predicate defined using a :class:`torch.nn.Module`. Note the call to `torch.cat` to merge
-    the two inputs of the binary predicate.
+    使用 :class:`torch.nn.Module` 定义的二元谓词。注意调用 `torch.cat` 以合并二元谓词的两个输入。
 
     >>> class PredicateModel(torch.nn.Module):
     ...     def __init__(self):
@@ -441,9 +444,9 @@ class Predicate(nn.Module):
     ...         self.dense2 = torch.nn.Linear(5, 1)
     ...
     ...     def forward(self, x, y):
-    ...         x = torch.cat([x, y], dim=1)
-    ...         x = self.elu(self.dense1(x))
-    ...         out = self.sigmoid(self.dense2(x))
+    ...         x = torch.cat([x, y], dim=1)# 将输入张量 x 和 y 在第 1 维度（特征维度）上拼接
+    ...         x = self.elu(self.dense1(x))# 通过第一个全连接层，然后应用 ELU 激活函数
+    ...         out = self.sigmoid(self.dense2(x)) # 通过第二个全连接层，然后应用 Sigmoid 激活函数
     ...         return out
     ...
     >>> predicate_model = PredicateModel()
@@ -454,8 +457,7 @@ class Predicate(nn.Module):
       (dense2): Linear(in_features=5, out_features=1, bias=True)
     ))
 
-    Binary predicate defined using a function. Note the call to `torch.cat` to merge the two inputs of the
-    binary predicate.
+    使用函数定义的二元谓词。注意调用 `torch.cat` 以合并二元谓词的两个输入。
 
     >>> b_p_f = ltn.Predicate(func=lambda x, y: torch.nn.Sigmoid()(
     ...                                             torch.sum(torch.cat([x, y], dim=1), dim=1)
@@ -463,13 +465,13 @@ class Predicate(nn.Module):
     >>> print(b_p_f)
     Predicate(model=LambdaModel())
 
-    Evaluation of a unary predicate on a constant. Note that:
+    在常量上评估一元谓词。注意：
 
-    - the predicate returns a :class:`ltn.core.LTNObject` instance;
-    - since a constant has been given, the `LTNObject` in output does not have free variables;
-    - the shape of the `LTNObject` in output is empty since the predicate has been evaluated on a constant, namely on one single individual;
-    - the attribute `value` of the `LTNObject` in output contains the result of the evaluation of the predicate;
-    - the `value` is in the range [0., 1.] since it has to be interpreted as a truth value. This is assured thanks to the *sigmoid function* in the definition of the predicate.
+    - 谓词返回一个 :class:`ltn.core.LTNObject` 实例；
+    - 因为给定了一个常量，所以输出的 `LTNObject` 没有自由变量；
+    - 由于谓词在一个常量（即一个个体）上进行评估，所以输出的 `LTNObject` 形状为空；
+    - 输出的 `LTNObject` 的 `value` 属性包含谓词评估的结果；
+    - 由于需要解释为真值，因此 `value` 在 [0., 1.] 范围内。通过在谓词定义中使用 *sigmoid function* 来确保这一点。
 
     >>> c = ltn.Constant(torch.tensor([0.5, 0.01, 0.34, 0.001]))
     >>> out = p_f(c)
@@ -484,10 +486,10 @@ class Predicate(nn.Module):
     >>> print(out.shape())
     torch.Size([])
 
-    Evaluation of a unary predicate on a variable. Note that:
+    在变量上评估一元谓词。注意：
 
-    - since a variable has been given, the `LTNObject` in output has one free variable;
-    - the shape of the `LTNObject` in output is 2 since the predicate has been evaluated on a variable with two individuls.
+    - 因为给定了一个变量，所以输出的 `LTNObject` 有一个自由变量；
+    - 由于谓词在具有两个个体的变量上进行评估，所以输出的 `LTNObject` 形状为 2。
 
     >>> v = ltn.Variable('v', torch.tensor([[0.4, 0.3],
     ...                                     [0.32, 0.043]]))
@@ -501,10 +503,10 @@ class Predicate(nn.Module):
     >>> print(out.shape())
     torch.Size([2])
 
-    Evaluation of a binary predicate on a variable and a constant. Note that:
+    在变量和常量上评估二元谓词。注意：
 
-    - like in the previous example, the `LTNObject` in output has just one free variable, since only one variable has been given to the predicate;
-    - the shape of the `LTNObject` in output is 2 since the predicate has been evaluated on a variable with two individuals. The constant does not add dimensions to the output.
+    - 如前一个示例中一样，输出的 `LTNObject` 只有一个自由变量，因为谓词只给定了一个变量；
+    - 由于谓词在具有两个个体的变量上进行评估，所以输出的 `LTNObject` 形状为 2。常量不会为输出增加维度。
 
     >>> v = ltn.Variable('v', torch.tensor([[0.4, 0.3],
     ...                                     [0.32, 0.043]]))
@@ -519,12 +521,12 @@ class Predicate(nn.Module):
     >>> print(out.shape())
     torch.Size([2])
 
-    Evaluation of a binary predicate on two variables. Note that:
+    在两个变量上评估二元谓词。注意：
 
-    - since two variables have been given, the `LTNObject` in output has two free variables;
-    - the shape of the `LTNObject` in output is `(2, 3)` since the predicate has been evaluated on a variable with two individuals and a variable with three individuals;
-    - the first dimension is dedicated to variable `x`, which is also the first one appearing in `free_vars`, while the second dimension is dedicated to variable `y`, which is the second one appearing in `free_vars`;
-    - it is possible to access the `value` attribute for getting the results of the predicate. For example, at position `(1, 2)` there is the evaluation of the predicate on the second individual of `x` and third individuals of `y`.
+    - 因为给定了两个变量，所以输出的 `LTNObject` 有两个自由变量；
+    - 由于谓词在具有两个个体的变量和具有三个个体的变量上进行评估，所以输出的 `LTNObject` 形状为 (2, 3)；
+    - 第一个维度对应于变量 `x`，它也是 `free_vars` 中首先出现的变量，而第二个维度对应于变量 `y`，它是 `free_vars` 中第二个出现的变量；
+    - 可以访问 `value` 属性以获取谓词的结果。例如，在位置 (1, 2) 处，评估的是 `x` 的第二个个体和 `y` 的第三个个体上的谓词。
 
     >>> x = ltn.Variable('x', torch.tensor([[0.4, 0.3],
     ...                                     [0.32, 0.043]]))
@@ -545,81 +547,89 @@ class Predicate(nn.Module):
     >>> print(out.value[1, 2])
     tensor(0.6906)
     """
+
     def __init__(self, model=None, func=None):
         """
-        Initializes the LTN predicate in two different ways:
-            1. if `model` is not None, it initializes the predicate with the given PyTorch model;
-            2. if `model` is None, it uses the `func` as a function to define
-            the LTN predicate. Note that, in this case, the LTN predicate is not learnable. So, the lambda function has
-            to be used only for simple predicates.
+        以两种不同的方式初始化 LTN 谓词：
+        1. 如果 `model` 不为 None，则使用给定的 PyTorch 模型初始化谓词；
+        2. 如果 `model` 为 None，则使用 `func` 作为函数来定义 LTN 谓词。注意，在这种情况下，
+           LTN 谓词是不可训练的。因此，lambda 函数只能用于简单的谓词。
         """
         super(Predicate, self).__init__()
+        # 如果 model 和 func 都被指定了，则引发 ValueError
         if model is not None and func is not None:
             raise ValueError("Both model and func parameters have been specified. Expected only one of "
                              "the two parameters to be specified.")
-
+        # 如果 model 和 func 都未被指定，则引发 ValueError
         if model is None and func is None:
             raise ValueError("Both model and func parameters have not been specified. Expected one of the two "
                              "parameters to be specified.")
-
+        # 如果 model 不为 None，则检查 model 是否为 nn.Module 的实例
         if model is not None:
             if not isinstance(model, nn.Module):
+                # 如果 model 不是 nn.Module 的实例，则引发 TypeError
                 raise TypeError("Predicate() : argument 'model' (position 1) must be a torch.nn.Module, "
                                 "not " + str(type(model)))
+            # 将 model 赋值给实例属性 self.model
             self.model = model
         else:
             if not isinstance(func, types.LambdaType):
+                # 如果 func 不为 None，则检查 func 是否为 lambda 函数
+                # 如果 func 不是 lambda 函数，则引发 TypeError
                 raise TypeError("Predicate() : argument 'func' (position 2) must be a function, "
                                 "not " + str(type(model)))
+            # 将 func 包装为 LambdaModel，并赋值给实例属性 self.model
             self.model = LambdaModel(func)
 
     def __repr__(self):
+        # 返回当前实例的字符串表示形式
         return "Predicate(model=" + str(self.model) + ")"
 
     def forward(self, *inputs, **kwargs):
         """
-        It computes the output of the predicate given some :ref:`LTN objects <noteltnobject>` in input.
+       它计算给定一些输入的 :ref:`LTN objects <noteltnobject>` 的谓词输出。
 
-        Before computing the predicate, it performs the :ref:`LTN broadcasting <broadcasting>` of the inputs.
+       在计算谓词之前，它会对输入进行 :ref:`LTN broadcasting <broadcasting>`。
 
-        Parameters
-        ----------
-        inputs : :obj:`tuple` of :class:`ltn.core.LTNObject`
-            Tuple of :ref:`LTN objects <noteltnobject>` for which the predicate has to be computed.
+       参数
+       ----------
+       inputs : :obj:`tuple` of :class:`ltn.core.LTNObject`
+         需要计算谓词的 :ref:`LTN objects <noteltnobject>` 的元组。
 
-        Returns
-        ----------
-        :class:`ltn.core.LTNObject`
-            An :ref:`LTNObject <noteltnobject>` whose `value` attribute contains the truth values representing the result of the
-            predicate, while `free_vars` attribute contains the labels of the free variables contained in the result.
+       返回
+       ----------
+       :class:`ltn.core.LTNObject`
+           一个 :ref:`LTNObject <noteltnobject>`，其 `value` 属性包含表示谓词结果的真值，而 `free_vars` 属性包含结果中自由变量的标签。
 
-        Raises
-        ----------
-        :class:`TypeError`
-            Raises when the types of the inputs are incorrect.
+       引发
+       ----------
+       :class:`TypeError`
+          当输入的类型不正确时引发。
 
-        :class:`ValueError`
-            Raises when the values of the output are not in the range [0., 1.].
+       :class:`ValueError`
+          当输出的值不在 [0., 1.] 范围内时引发。
         """
+        # 将输入转换为列表
         inputs = list(inputs)
+        # 检查所有输入是否都是 LTNObject 的实例，如果不是则引发 TypeError
         if not all(isinstance(x, LTNObject) for x in inputs):
             raise TypeError("Expected parameter 'inputs' to be a tuple of LTNObject, but got " + str([type(i)
                                                                                                       for i in inputs]))
-
+        # 对输入对象进行 LTN broadcasting，并获取处理后的对象、输出变量和输出形状
         proc_objs, output_vars, output_shape = process_ltn_objects(inputs)
 
-        # the management of the input is left to the model or the lambda function
+        # 将处理后的对象的值传递给模型或 lambda 函数进行计算
         output = self.model(*[o.value for o in proc_objs], **kwargs)
 
-        # check if output of predicate contains only truth values, namely values in the range [0., 1.]
+        # 检查谓词的输出是否只包含真值，即值是否在 [0., 1.] 范围内
         if not torch.all(torch.where(torch.logical_and(output >= 0., output <= 1.), 1., 0.)):
             raise ValueError("Expected the output of a predicate to be in the range [0., 1.], but got some values "
                              "outside of this range. Check your predicate implementation!")
-
+        # 将输出重新形状为输出形状 # 将输出重新形状为输出形状
         output = torch.reshape(output, tuple(output_shape))
-        # we assure the output is float in the case it is double to avoid type incompatibilities
+        # 确保输出为浮点类型，以避免类型不兼容
         output = output.float()
-
+        # 返回包含输出值和输出变量的 LTNObject
         return LTNObject(output, output_vars)
 
 
@@ -980,11 +990,12 @@ def diag(*vars):
         raise TypeError("Expected parameter 'vars' to be a tuple of Variable, but got " + str([type(v) for v in vars]))
     # check if the user has given only one variable
     if not len(vars) > 1:
-        raise ValueError("Expected parameter 'vars' to be a tuple of more than one Variable, but got just one Variable.")
+        raise ValueError(
+            "Expected parameter 'vars' to be a tuple of more than one Variable, but got just one Variable.")
     # check if variables have the same number of individuals, assuming the first dimension is the batch dimension
     n_individuals = [var.shape()[0] for var in vars]
     if not len(
-        set(n_individuals)) == 1:
+            set(n_individuals)) == 1:
         raise ValueError("Expected the given LTN variables to have the same number of individuals, "
                          "but got the following numbers of individuals " + str([v.shape()[0] for v in vars]))
     diag_label = "diag_" + "_".join([var.latent_var for var in vars])
@@ -1407,6 +1418,7 @@ class Quantifier:
     >>> print(out.shape())
     torch.Size([])
     """
+
     def __init__(self, agg_op, quantifier):
         if not isinstance(agg_op, ltn.fuzzy_ops.AggregationOperator):
             raise TypeError("Quantifier() : argument 'agg_op' (position 1) must be a "
