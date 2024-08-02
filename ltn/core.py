@@ -629,7 +629,8 @@ class Predicate(nn.Module):
         output = torch.reshape(output, tuple(output_shape))
         # 确保输出为浮点类型，以避免类型不兼容
         output = output.float()
-        # 返回包含输出值和输出变量的 LTNObject
+        # 返回包含输出值和输出变量的 LTNObject.
+        #
         return LTNObject(output, output_vars)
 
 
