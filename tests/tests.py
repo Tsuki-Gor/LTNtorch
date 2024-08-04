@@ -6,8 +6,8 @@ import ltn
 from ltn import LTNObject, Constant, Variable, process_ltn_objects, Predicate, Function, LambdaModel, diag, undiag, \
     Connective, Quantifier
 import torch
-torch.manual_seed(2020)
-torch.set_printoptions(precision=4)
+torch.manual_seed(2020) # 作用是固定随机数种子，使得每次运行的结果都是一样的
+torch.set_printoptions(precision=4) # 作用是设置打印的精度，即小数点后的位数
 
 
 def test_LTNObject():

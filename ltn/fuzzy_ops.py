@@ -2,8 +2,7 @@
 .. _fuzzyop:
 
 The `ltn.fuzzy_ops` module contains the PyTorch implementation of some common fuzzy logic operators and aggregators.
-Refer to the `LTN paper <https://arxiv.org/abs/2012.13635>`_ for a detailed description of these operators
-(see the Appendix).
+Refer to the `LTN paper <https://arxiv.org/abs/2012.13635>`_ for a detailed description of these operators(see the Appendix).
 
 All the operators included in this module support the traditional NumPy/PyTorch broadcasting.
 
@@ -14,16 +13,21 @@ The operators have been designed to be used with :class:`ltn.core.Connective` or
 import torch
 from ltn import LTNObject
 
-# these are the projection functions to make the Product Real Logic stable. These functions help to change the input
-# of particular fuzzy operators in such a way they do not lead to gradient problems (vanishing, exploding).
+# these are the projection functions to make the Product Real Logic stable. These functions help to change the input of particular fuzzy operators in such a way they do not lead to gradient problems (vanishing, exploding).
 eps = 1e-4  # epsilon is set to small value in such a way to not change the input too much
 
+# 这些是投影函数，用于使乘积实逻辑（Product Real Logic）稳定。这些函数通过改变特定模糊算子的输入，避免梯度问题（消失或爆炸）。
+# 将epsilon设置为一个很小的值，以避免对输入造成太大影响。
+
+# eps的作用：`eps` 的作用是用于确保输入值不会为零或接近于零，从而避免梯度消失或爆炸问题。具体而言，`eps` 是一个非常小的数值（通常设为 `1e-4`），它被添加到输入值中，使得输入值始终保持在一个合理的范围内。这对于在使用某些模糊逻辑算子（如乘积运算符）时尤为重要，因为这些算子可能会导致梯度的数值不稳定。通过引入 `eps`，可以提高数值计算的稳定性。
 
 def pi_0(x):
     """
     Function that has to be used when we need to assure that the truth value in input to a fuzzy operator is never equal
     to zero, in such a way to avoid gradient problems. It maps the interval [0, 1] in the interval ]0, 1], where the 0
     is excluded.
+    # ]0, 1]表示开区间，即不包括0，包括1
+    # [0, 1]表示闭区间，即包括0，包括1
 
     Parameters
     -----------
@@ -60,6 +64,7 @@ def pi_1(x):
 
 
 # utility function to check the input of connectives and quantifiers
+# 用于检查连接词和量词输入的实用函数
 def check_values(*values):
     """
     This function checks the input values are in the range [0., 1.] and raises an exception if it is not the case.
@@ -82,12 +87,19 @@ def check_values(*values):
 
 
 # utility function to check the integrity of the mask when guarded quantification is used
+# 当使用守卫量化时，用于检查掩码完整性的实用函数
+# 在量词的类中，只有一个例子用到**掩码**
 def check_mask(mask, xs):
     """
     This function is used when guarded quantification is used in a quantifier aggregator.
 
     It checks that the grounding of the formula in input (`xs`) is of the same shape of the `mask` used for masking it.
     Then, it checks that the mask is of boolean type.
+
+    当在量词聚合器中使用守卫量化时使用此函数。
+
+    它检查输入公式的基础（`xs`）与用于掩码的 `mask` 的形状是否相同。
+    然后，它检查掩码是否为布尔类型。
 
     Parameters
     -----------
@@ -96,17 +108,23 @@ def check_mask(mask, xs):
     xs : :class:`torch.Tensor`
             :ref:`Grounding <notegrounding>` of formula on which the guarded quantification has to be performed.
 
+    mask : :class:`torch.Tensor`
+            布尔掩码，用于在守卫量化期间过滤 `xs` 的值。
+    xs : :class:`torch.Tensor`
+            公式的基础（Grounding），在其上进行守卫量化。
+
     Raises
     -----------
     :class:`ValueError`
         Raises when the shapes of the inputs differ or `mask` is not of the correct type.
+        当输入的形状不同或 `mask` 类型不正确时抛出异常。
     """
     if mask.shape != xs.shape:
         raise ValueError("'xs' and 'mask' must have the same shape.")
     if not isinstance(mask, (torch.BoolTensor, torch.cuda.BoolTensor)):
         raise ValueError("'mask' must be a torch.BoolTensor or torch.cuda.BoolTensor.")
 
-
+# 上面的这些全局变量和函数是要在下面这些模糊逻辑运算符（算子）的实现中使用的
 # here, it begins the implementation of fuzzy operators in PyTorch
 
 class ConnectiveOperator:
@@ -181,7 +199,7 @@ class BinaryConnectiveOperator(ConnectiveOperator):
         raise NotImplementedError()
 
 # NEGATION
-
+# 否定
 
 class NotStandard(UnaryConnectiveOperator):
     """
@@ -271,7 +289,7 @@ class NotGodel(UnaryConnectiveOperator):
         return torch.eq(x, 0.).float()
 
 # CONJUNCTION
-
+# 合取
 
 class AndMin(BinaryConnectiveOperator):
     """
@@ -476,7 +494,7 @@ class AndLuk(BinaryConnectiveOperator):
         return torch.maximum(x + y - 1., zeros)
 
 # DISJUNCTION
-
+# 析取
 
 class OrMax(BinaryConnectiveOperator):
     """
@@ -680,6 +698,8 @@ class OrLuk(BinaryConnectiveOperator):
         ones = torch.ones_like(x)
         return torch.minimum(x + y, ones)
 
+# IMPLICARTION
+# 蕴涵
 
 class ImpliesKleeneDienes(BinaryConnectiveOperator):
     """
@@ -1029,7 +1049,7 @@ class ImpliesLuk(BinaryConnectiveOperator):
         return torch.minimum(1. - x + y, ones)
 
 # EQUIVALENCE
-
+# 等价
 
 class Equiv(BinaryConnectiveOperator):
     """
@@ -1126,8 +1146,11 @@ class Equiv(BinaryConnectiveOperator):
         """
         return self.and_op(self.implies_op(x, y), self.implies_op(y, x))
 
-# AGGREGATORS FOR QUANTIFIERS - only the aggregators introduced in the LTN paper are implemented
+# 前面的这些类都是要在创建一个Connective实例的时候传入的参数，用来指定这个Connective的具体操作。这些类都是用来实现模糊逻辑中的一些操作，如`合取`、`析取`、`蕴涵`、`等价`等。这些操作是用来对谓词的真值进行操作的，也就是对谓词的grounding进行操作。这些操作是用来对grounding进行操作的，也就是对grounding的值进行操作。
 
+# AGGREGATORS FOR QUANTIFIERS - only the aggregators introduced in the LTN paper are implemented
+# 量词的聚合器 - 仅实现了LTN论文中介绍的聚合器
+# 这里的这些AggreationOperator是用来实现量词的（即`任意（即所有）`，`存在`），量词是一种逻辑符号，用来表达一种广义的量化关系，如“对于所有”、“存在”等。在LTN中，量词是用来对谓词进行量化的，即对谓词的真值进行聚合。表达的是，在具体对一个张量进行量化操作的时候，这些数据如何进行聚合，也就是具体怎么计算这些数字。这些AggreationOperator是当创建一个量词实例（Quantifier类的实例）的时候，需要传入的参数，用来指定这个量词的聚合方式。
 
 class AggregationOperator:
     """

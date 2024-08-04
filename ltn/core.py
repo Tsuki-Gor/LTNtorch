@@ -1222,9 +1222,13 @@ class Connective:
     Notes
     -----
     - the LTN connective supports various fuzzy connective operators. They can be found in :ref:`ltn.fuzzy_ops <fuzzyop>`;
+    - LTN连接符支持各种模糊连接操作符。它们可以在 :ref:`ltn.fuzzy_ops <fuzzyop>` 中找到；
     - the LTN connective allows to use these fuzzy operators with LTN formulas. It takes care of combining sub-formulas which have different variables appearing in them (:ref:`LTN broadcasting <broadcasting>`).
+     - LTN连接符允许将这些模糊操作符与LTN公式一起使用。它负责组合包含不同变量的子公式 (:ref:`LTN broadcasting <broadcasting>`)；
     - an LTN connective can be applied only to :ref:`LTN objects <noteltnobject>` containing truth values, namely values in :math:`[0., 1.]`;
+    - LTN连接符只能应用于包含真值的 :ref:`LTN objects <noteltnobject>`，即值在 :math:`[0., 1.]` 范围内；
     - the output of an LTN connective is always an :ref:`LTN object <noteltnobject>` (:class:`ltn.core.LTNObject`).
+    - LTN连接符的输出总是一个 :ref:`LTN object <noteltnobject>` (:class:`ltn.core.LTNObject`)。
 
     .. automethod:: __call__
 
@@ -1232,6 +1236,7 @@ class Connective:
     --------
     :class:`ltn.fuzzy_ops`
         The `ltn.fuzzy_ops` module contains the definition of common fuzzy connective operators that can be used with LTN connectives.
+         `ltn.fuzzy_ops` 模块包含常见模糊连接操作符的定义，这些操作符可以与LTN连接符一起使用。
 
     Examples
     --------
@@ -1246,6 +1251,15 @@ class Connective:
     - the shape of the `LTNObject` in output is `(2, 3, 4)`. The first dimension is associated with variable `x`, which has two individuals, the second dimension with variable `y`, which has three individuals, while the last dimension with variable `z`, which has four individuals;
     - it is possible to access to specific results by indexing the attribute `value`. For example, at index `(0, 1, 2)` there is the evaluation of the formula on the first individual of `x`, second individual of `y`, and third individual of `z`;
     - the attribute `free_vars` of the `LTNObject` in output contains the labels of the three variables appearing in the formula.
+    - 连接操作符只能应用于表示真值的输入。在这种情况下，我们有两个谓词；
+    - LTNtorch 为连接提供了各种语义，这里我们使用 Goguen 连接 (:class:`ltn.fuzzy_ops.AndProd`)；
+    - LTNtorch 在计算**谓词**之前将 :ref:`LTN broadcasting <broadcasting>` 应用于变量；
+    - LTNtorch 在应用所选**连接操作符**之前将 :ref:`LTN broadcasting <broadcasting>` 应用于操作数；
+    - 连接操作符的结果是一个包含 [0., 1.] 范围内真值的 :class:`ltn.core.LTNObject` 实例；
+    - 输出的 `LTNObject` 的属性 `value` 包含连接操作符的结果；
+    - 输出的 `LTNObject` 的形状为 `(2, 3, 4)`。第一个维度与变量 `x` 相关，具有两个个体，第二个维度与变量 `y` 相关，具有三个个体，最后一个维度与变量 `z` 相关，具有四个个体；
+    - 可以通过索引属性 `value` 访问特定结果。例如，在索引 `(0, 1, 2)` 处，有对 `x` 的第一个个体，`y` 的第二个个体和 `z` 的第三个个体的公式的评估；
+    - 输出的 `LTNObject` 的属性 `free_vars` 包含公式中出现的三个变量的标签。
 
     >>> import ltn
     >>> import torch
@@ -1302,13 +1316,12 @@ class Connective:
     def __call__(self, *operands, **kwargs):
         """
         It applies the selected fuzzy connective operator (`connective_op` attribute) to the operands
-        (:ref:`LTN objects <noteltnobject>`) given in input.
+        (:ref:`LTN objects <noteltnobject>`) given in input. # 将选择的模糊连接操作符（`connective_op` 属性）应用于输入中给定的操作数（:ref:`LTN objects <noteltnobject>`）。
 
         Parameters
         -----------
         operands : :obj:`tuple` of :class:`ltn.core.LTNObject`
-            Tuple of :ref:`LTN objects <noteltnobject>` representing the operands to which the fuzzy connective
-            operator has to be applied.
+            Tuple of :ref:`LTN objects <noteltnobject>` representing the operands to which the fuzzy connective operator has to be applied. # 代表要应用模糊连接操作符的操作数的 :ref:`LTN objects <noteltnobject>` 元组。
 
         Returns
         ----------
@@ -1341,10 +1354,13 @@ class Connective:
 
         proc_objs, vars, n_individuals_per_var = process_ltn_objects(operands)
         # the connective operator needs the values of the objects and not the objects themselves
+        # 连接操作符需要对象的值而不是对象本身
         proc_objs = [o.value for o in proc_objs]
         output = self.connective_op(*proc_objs)
         # reshape the output according to the dimensions given by the processing function
+        # 根据处理函数给出的维度重塑输出
         # we need to give this shape in order to have different axes associated to different variables, as usual
+        # 我们需要给出这个形状，以便有不同的轴与不同的变量关联，就像往常一样
         output = torch.reshape(output, n_individuals_per_var)
         return LTNObject(output, vars)
 
@@ -1355,20 +1371,25 @@ class Quantifier:
 
     An LTN quantifier is :ref:`grounded <notegrounding>` as a fuzzy aggregation operator. See :ref:`quantification in LTN <quantification>`
     for more information about quantification.
+    一个 LTN 量化器作为模糊聚合操作符进行基础化（grounded）。有关量化的更多信息，请参见：ref:`quantification in LTN <quantification>`。
 
     Parameters
     ----------
     agg_op : :class:`ltn.fuzzy_ops.AggregationOperator`
         The fuzzy aggregation operator that becomes the :ref:`grounding <notegrounding>` of the LTN quantifier.
+        模糊聚合操作符，它成为 LTN 量化器的基础（grounding）。
     quantifier : :obj:`str`
         String indicating the quantification that has to be performed ('e' for ∃, or 'f' for ∀).
+        表示要执行的量化操作的字符串（'e' 表示存在量化，'f' 表示全称量化）。
 
     Attributes
     -----------
     agg_op : :class:`ltn.fuzzy_ops.AggregationOperator`
         See `agg_op` parameter.
+        参见 `agg_op` 参数。
     quantifier : :obj:`str`
         See `quantifier` parameter.
+        参见 `quantifier` 参数。
 
     Raises
     ----------
@@ -1385,21 +1406,29 @@ class Quantifier:
     - boolean conditions (by setting parameters `mask_fn` and `mask_vars`) can be used for :ref:`guarded quantification <guarded>`;
     - an LTN quantifier can be applied only to :ref:`LTN objects <noteltnobject>` containing truth values, namely values in :math:`[0., 1.]`;
     - the output of an LTN quantifier is always an :ref:`LTN object <noteltnobject>` (:class:`ltn.core.LTNObject`).
+    - LTN 量化器支持各种模糊聚合操作符，这些操作符可以在 :class:`ltn.fuzzy_ops` 中找到；
+    - LTN 量化器允许将这些模糊聚合器与 LTN 公式一起使用。它负责根据参数中的一些 LTN 变量选择公式（`LTNObject`）维度进行聚合；
+    - 布尔条件（通过设置参数 `mask_fn` 和 `mask_vars`）可以用于：ref:`guarded quantification <guarded>`；
+    - LTN 量化器只能应用于包含真值的 :ref:`LTN objects <noteltnobject>`，即值在 :math:`[0., 1.]` 范围内；
+    - LTN 量化器的输出总是一个 :ref:`LTN object <noteltnobject>` (:class:`ltn.core.LTNObject`)。
 
     .. automethod:: __call__
 
     See Also
     --------
     :class:`ltn.fuzzy_ops`
-        The `ltn.fuzzy_ops` module contains the definition of common fuzzy aggregation operators that can be used with
-        LTN quantifiers.
+        The `ltn.fuzzy_ops` module contains the definition of common fuzzy aggregation operators that can be used with LTN quantifiers.
+        `ltn.fuzzy_ops` 模块包含常见模糊聚合操作符的定义，这些操作符可以与 LTN 量化器一起使用。
 
     Examples
     --------
     Behavior of a binary predicate evaluated on two variables. Note that:
+    第一个例子：二元谓词在两个变量上的行为。
 
     - the shape of the `LTNObject` in output is `(2, 3)` since the predicate has been computed on a variable with two individuals and a variable with three individuals;
+    - 输出的 `LTNObject` 的形状是 `(2, 3)`，因为谓词在具有两个个体的变量和具有三个个体的变量上计算；
     - the attribute `free_vars` of the `LTNObject` in output contains the labels of the two variables given in input to the predicate.
+    - 输出的 `LTNObject` 的 `free_vars` 属性包含输入给谓词的两个变量的标签。
 
     >>> import ltn
     >>> import torch
@@ -1423,14 +1452,24 @@ class Quantifier:
     >>> print(out.shape())
     torch.Size([2, 3])
 
+
+
     Universal quantification on one single variable of the same predicate. Note that:
+    第二个例子：对同一谓词的单个变量进行全称量化。（这里的同一谓词，指的是上一个例子中的那个谓词）
 
     - `quantifier='f'` means that we are defining the fuzzy semantics for the universal quantifier;
     - the result of a quantification operator is always a :class:`ltn.core.LTNObject` instance;
     - LTNtorch supports various sematics for quantifiers, here we use :class:`ltn.fuzzy_ops.AggregPMeanError` for :math:`\\forall`;
-    - the shape of the `LTNObject` in output is `(3)` since the quantification has been performed on variable `x`. Only the dimension associated with variable `y` has left since the quantification has been computed by LTNtorch as an aggregation on the dimension related with variable `x`;
+    - the shape of the `LTNObject` in output is `(3)` since the quantification has been performed on variable `x`. Only the dimension associated with variable `y` has left since the quantification has been computed by LTNtorch as an aggregation（聚合） on the dimension related with variable `x`;
     - the attribute `free_vars` of the `LTNObject` in output contains only the label of variable `y`. This is because variable `x` has been quantified, namely it is not a free variable anymore;
-    - in LTNtorch, the quantification is performed by computing the value of the predicate first and then by aggregating on the selected dimensions, specified by the quantified variables.
+    - in LTNtorch, the quantification is performed by computing the value of the predicate first and then by aggregating on the selected dimensions, specified（指定） by the quantified variables.
+
+    - `quantifier='f'` 表示我们正在定义全称量化器的模糊语义； # 这个类的实例有一个属性 quantifier，它表示量化器的类型。在这里，我们使用 'f' 来表示全称量化；
+    - 量化操作符的结果始终是一个 :class:`ltn.core.LTNObject` 实例；
+    - LTNtorch 支持各种量化器的**语义**，这里我们使用 :class:`ltn.fuzzy_ops.AggregPMeanError` 作为 :math:`\\forall` 的量化操作；
+    - 输出的 `LTNObject` 的形状为 `(3)`，因为量化是在变量 `x` 上进行的。由于 LTNtorch 将与变量 `x` 相关的维度进行了聚合，输出中仅保留与变量 `y` 相关的维度；
+    - 输出的 `LTNObject` 的属性 `free_vars` 只包含变量 `y` 的标签。这是因为变量 `x` 已被量化，不再是自由变量；
+    - 在 LTNtorch 中，量化首先计算谓词的值，然后在由量化变量指定的选定维度上进行聚合。
 
     >>> Forall = ltn.Quantifier(ltn.fuzzy_ops.AggregPMeanError(), quantifier='f')
     >>> print(Forall)
@@ -1445,10 +1484,15 @@ class Quantifier:
     >>> print(out.shape())
     torch.Size([3])
 
+
+
     Universal quantification on both variables of the same predicate. Note that:
+    第三个例子：对同一谓词的两个变量进行全称量化。
 
     - the shape of the `LTNObject` in output is empty since the quantification has been performed on both variables. No dimension has left since the quantification has been computed by LTNtorch as an aggregation on both dimensions of the `value` of the predicate;
     - the attribute `free_vars` of the `LTNObject` in output contains no labels of variables. This is because both variables have been quantified, namely they are not free variables anymore.
+    - 输出中 `LTNObject` 的形状为空，因为量化操作已对两个变量进行了聚合。由于LTNtorch对谓词值的两个维度进行了聚合，因此没有剩余维度。
+    - 输出中 `LTNObject` 的属性 `free_vars` 不包含任何变量标签。这是因为两个变量都已被量化，即它们不再是自由变量。
 
     >>> out = Forall([x, y], p(x, y))
     >>> print(out)
@@ -1460,17 +1504,22 @@ class Quantifier:
     >>> print(out.shape())
     torch.Size([])
 
-    Universal quantification on one variable, and existential quantification on the other variable, of the same predicate.
-    Note that:
 
-    - the only way in LTNtorch to apply two different quantifiers to the same formula is a nested syntax;
+
+    Universal quantification on one variable, and existential quantification on the other variable, of the same predicate.Note that:
+    第四个例子：对同一谓词（这个谓词涉及两个变量）的一个变量进行全称量化，另一个变量进行存在量化。
+
+    - the only way in LTNtorch to apply two different quantifiers to the same formula（这里公式的含义就是类似于离散中的一个表达式，这里这个表达式就是一个简单的一个谓词形成的） is a nested syntax（嵌套语法）;
     - `quantifier='e'` means that we are defining the fuzzy semantics for the existential quantifier;
     - LTNtorch supports various sematics for quantifiers, here we use :class:`ltn.fuzzy_ops.AggregPMean` for :math:`\\exists`.
+    - 在 LTNtorch 中，对同一公式应用两种不同的量化器的唯一方法是使用嵌套语法；
+    - `quantifier='e'` 表示我们定义的是存在量化器的模糊语义；
+    - LTNtorch 支持各种量化器的**语义**，这里我们使用 :class:`ltn.fuzzy_ops.AggregPMean` 作为 :math:`\\exists` 的**聚合操作符**。
 
     >>> Exists = ltn.Quantifier(ltn.fuzzy_ops.AggregPMean(), quantifier='e')
     >>> print(Exists)
     Quantifier(agg_op=AggregPMean(p=2, stable=True), quantifier='e')
-    >>> out = Forall(x, Exists(y, p(x, y)))
+    >>> out = Forall(x, Exists(y, p(x, y))) # Forall这个量化器是全称量化器，Exists这个量化器是存在量化器。Forall在前一个例子中已经定义了。
     >>> print(out)
     LTNObject(value=tensor(0.9920), free_vars=[])
     >>> print(out.value)
@@ -1480,8 +1529,10 @@ class Quantifier:
     >>> print(out.shape())
     torch.Size([])
 
-    Guarded quantification. We perform a universal quantification on both variables of the same predicate, considering
-    only the individuals of variable `x` whose sum of features is lower than a certain threshold. Note that:
+
+
+    Guarded quantification. We perform a universal quantification on both variables of the same predicate, considering only the individuals of variable `x` whose sum of features is lower than a certain threshold. Note that:
+    第五个例子：条件量化。我们对同一谓词的两个变量进行全称量化，只考虑变量 x 中**特征和**低于某个阈值的个体。
 
     - guarded quantification requires the parameters `cond_vars` and `cond_fn` to be set;
     - `cond_vars` contains the variables on which the guarded condition is based on. In this case, we have decided to create a condition on `x`;
@@ -1489,10 +1540,16 @@ class Quantifier:
     - the second individual of `x`, which is `[0.3, 0.3]`, satisfies the condition, namely it will not be considered when the aggregation has to be performed. In other words, all the results of the predicate computed using the second individual of `x` will not be considered in the aggregation;
     - notice the result changes compared to the previous example (:math:`\\forall x \\forall y P(x, y)`). This is due to the fact that some truth values of the result of the predicate are not considered in the aggregation due to guarded quantification. These values are at positions `(1, 0)`, `(1, 1)`, and `(1, 2)`, namely all the positions related with the second individual of `x` in the result of the predicate;
     - notice that the shape of the `LTNObject` in output and its attribute `free_vars` remain the same compared to the previous example. This is because the quantification is still on both variables, namely it is perfomed on both dimensions of the result of the predicate.
+    - 条件量化需要设置参数 `cond_vars` 和 `cond_fn`。
+    - `cond_vars` 包含条件所基于的变量。在此例中，我们对 `x` 设置了条件。
+    - `cond_fn` 包含作为条件的函数。在此例中，它验证 `x` 的个体特征和是否小于1（我们的阈值）。
+    - `x` 的第二个个体 `[0.3, 0.3]` 满足条件，因此在聚合时不会考虑它。换句话说，使用 `x` 的第二个个体计算的谓词结果不会在聚合中考虑。
+    - 请注意，与前一个示例相比，结果发生了变化（:math:`\\forall x \\forall y P(x, y)`）。这是因为由于条件量化，谓词结果的一些真值未被考虑在聚合中。这些值位于位置 `(1, 0)`、`(1, 1)` 和 `(1, 2)`，即与 `x` 的第二个个体相关的所有位置。
+    - 请注意，输出中 `LTNObject` 的形状及其属性 `free_vars` 与前一个示例保持相同。这是因为量化仍然在两个变量上执行，即在谓词结果的两个维度上执行。
 
     >>> out = Forall([x, y], p(x, y),
     ...             cond_vars=[x],
-    ...             cond_fn=lambda x: torch.less(torch.sum(x.value, dim=1), 1.))
+    ...             cond_fn=lambda x: torch.less(torch.sum(x.value, dim=1), 1.)) # x这个变量有多个个体，每个个体的多个特征先求和，然后这个和要和一个阈值比较。
     >>> print(out)
     LTNObject(value=tensor(0.9844, dtype=torch.float64), free_vars=[])
     >>> print(out.value)
@@ -1502,13 +1559,20 @@ class Quantifier:
     >>> print(out.shape())
     torch.Size([])
 
+
+
     Universal quantification of both variables of the same predicate using diagonal quantification
     (:func:`ltn.core.diag`). Note that:
+    第六个例子：对同一谓词的两个变量使用对角线（全称）量化（ltn.core.diag函数）。
 
     - the variables have the same number of individuals since it is a constraint for applying diagonal quantification;
     - since diagonal quantification has been set, the predicate will not be computed on all the possible combinations of individuals of the two variables (that are 4), namely the :ref:`LTN broadcasting <broadcasting>` is disabled;
     - the predicate is computed only on the given tuples of individuals in a one-to-one correspondence, namely on the first individual of `x` and `y`, and second individual of `x` and `y`;
     - the result changes compared to the case without diagonal quantification. This is due to the fact that we are aggregating a smaller number of truth values since the predicate has been computed only two times.
+    - 变量具有相同数量的个体，这是应用对角线量化的约束条件；
+    - 设置了对角线量化后，谓词不会在两个变量的所有可能个体组合上计算（共有4种组合），即禁用了LTN广播；
+    - 谓词仅在一对一对应的个体上计算，即 `x` 和 `y` 的第一个个体，以及 `x` 和 `y` 的第二个个体；
+    - 结果与未使用对角线量化的情况不同。这是因为我们聚合的真值数量较少，因为谓词仅计算了两次。
 
     >>> x = ltn.Variable('x', torch.tensor([[0.3, 1.3],
     ...                                     [0.3, 0.3]]))
@@ -1545,11 +1609,11 @@ class Quantifier:
 
     def __call__(self, vars, formula, cond_vars=None, cond_fn=None, **kwargs):
         """
-        It applies the selected aggregation operator (`agg_op` attribute) to the formula given in input based on the
-        selected variables.
+        It applies the selected aggregation operator (`agg_op` attribute) to the formula given in input based on the selected variables.
+        它根据所选变量将选定的聚合操作符（`agg_op` 属性）应用于输入公式。
 
-        It allows also to perform a :ref:`guarded quantification <guarded>` by setting `cond_vars` and `cond_fn`
-        parameters.
+        It allows also to perform a :ref:`guarded quantification <guarded>` by setting `cond_vars` and `cond_fn` parameters.
+        它还允许通过设置 `cond_vars` 和 `cond_fn` 参数执行：ref:`guarded quantification <guarded>`。
 
         Parameters
         -----------
@@ -1561,6 +1625,18 @@ class Quantifier:
             List of LTN variables that appear in the :ref:`guarded quantification <guarded>` condition.
         cond_fn : :class:`function`, default=None
             Function representing the :ref:`guarded quantification <guarded>` condition.
+
+        参数
+        -----------
+        vars : :obj:`list` of :class:`ltn.core.Variable`
+            量化要执行的 LTN 变量列表。
+        formula : :class:`ltn.core.LTNObject`
+            要执行量化的公式。
+        cond_vars : :obj:`list` of :class:`ltn.core.Variable`, default=None
+            出现在：ref:`guarded quantification <guarded>` 条件中的 LTN 变量列表。
+        cond_fn : :class:`function`, default=None
+            表示：ref:`guarded quantification <guarded>` 条件的函数。
+        后两个参数对应于上面的第五个例子，条件量化
 
         Raises
         ----------
@@ -1642,6 +1718,7 @@ class Quantifier:
         undiag(*vars)
         # update the free variables on the output object by removing variables that have been aggregated
         return LTNObject(output, [var for var in formula.free_vars if var not in aggregation_vars])
+    # todo:__call__方法可以细化了解实现
 
     @staticmethod
     def compute_mask(formula, cond_vars, cond_fn, aggregation_vars):
