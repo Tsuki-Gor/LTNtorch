@@ -1319,9 +1319,9 @@ class AggregPMean(AggregationOperator):
     Parameters
     ----------
     p : :obj:`int`, default=2
-        Value of hyper-parameter `p` of the `pMean` fuzzy aggregation operator.
+        Value of hyper-parameter `p` of the `pMean` fuzzy aggregation operator. # “`pMean` 模糊聚合算子的超参数 `p` 的值。”
     stable : :obj:`bool`, default=True
-        Flag indicating whether to use the :ref:`stable version <stable>` of the operator or not.
+        Flag indicating whether to use the :ref:`stable version <stable>` of the operator or not. # “指示是否使用算子的 :ref:`稳定版本 <stable>`。”
 
     Attributes
     ----------
