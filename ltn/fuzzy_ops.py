@@ -1537,6 +1537,7 @@ class AggregPMeanError(AggregationOperator):
 
 class SatAgg:
     """
+    # 在tutorials/3-knowledgebase-and-learning.ipynb中有相关的例子
     `SatAgg` aggregation operator.
 
     :math:`\operatorname{SatAgg}_{\phi \in \mathcal{K}} \mathcal{G}_{\\theta} (\phi)`
